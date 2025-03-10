@@ -1,0 +1,232 @@
+{% extends "layouts/base.html" %}
+{% set project = "Help Management" %}
+
+{% block style %}
+    <style>
+        :root {
+            --primary-color: #ff0000; /* Red */
+            --secondary-color: #000000; /* White */
+            --accent-color: #000000; /* Black */
+            --background-color: #1a1a1a; /* Dark background */
+            --card-background-color: #333333; /* Darker card background */
+            --card-text-color: #ffffff; /* White text */
+            --btn-primary-color: #ff0000; /* Red button */
+            --btn-primary-hover-color: #cc0000; /* Darker red on hover */
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--secondary-color);
+        }
+
+        .card {
+            background-color: var(--card-background-color);
+            color: var(--card-text-color);
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            background-color: var(--btn-primary-color);
+            border-color: var(--btn-primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--btn-primary-hover-color);
+            border-color: var(--btn-primary-hover-color);
+        }
+
+        h1, h5 {
+            color: var(--primary-color);
+        }
+
+        .mark {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <h1><strong>Help Management</strong></h1>
+        <button class="btn btn-success mb-3" id="addHelpRequest">Add Help Request</button>
+        <table class="table table-striped" id="helpTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Message</th>
+                    <th>Response</th>
+                    <th>Status</th>
+                    <th>User ID</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="helpBody">
+                <!-- Help requests will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal for adding/editing a help request -->
+    <div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="helpModalLabel">Help Request</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="helpForm">
+                        <input type="hidden" id="helpId">
+                        <div class="form-group">
+                            <label for="helpMessage">Message</label>
+                            <input type="text" class="form-control" id="helpMessage">
+                        </div>
+                        <div class="form-group">
+                            <label for="helpResponse">Response</label>
+                            <input type="text" class="form-control" id="helpResponse">
+                        </div>
+                        <div class="form-group">
+                            <label for="helpStatus">Status</label>
+                            <input type="text" class="form-control" id="helpStatus">
+                        </div>
+                        <div class="form-group">
+                            <label for="helpUserId">User ID</label>
+                            <input type="number" class="form-control" id="helpUserId">
+                        </div>
+                        <button type="button" class="btn btn-primary" id="saveHelpRequest">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for delete confirmation -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete Help Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this help request?</p>
+                    <input type="hidden" id="deleteHelpId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block background %}
+<script>
+    async function fetchHelpRequests() {
+        try {
+            const response = await fetch(`/api/help_requests`);
+            if (!response.ok) throw new Error('Failed to fetch help requests');
+            const helpRequests = await response.json();
+            const helpBody = document.getElementById('helpBody');
+            helpBody.innerHTML = '';
+            helpRequests.forEach(helpRequest => {
+                helpBody.innerHTML += `
+                    <tr data-id="${helpRequest.id}" data-message="${helpRequest.message}" data-response="${helpRequest.response}" data-status="${helpRequest.status}" data-user-id="${helpRequest.user_id}">
+                        <td>${helpRequest.id}</td>
+                        <td>${helpRequest.message}</td>
+                        <td>${helpRequest.response}</td>
+                        <td>${helpRequest.status}</td>
+                        <td>${helpRequest.user_id}</td>
+                        <td>
+                            <button class="btn btn-primary edit-btn" data-id="${helpRequest.id}">Edit</button>
+                            <button class="btn btn-danger delete-btn" data-id="${helpRequest.id}">Delete</button>
+                        </td>
+                    </tr>`;
+            });
+        } catch (error) {
+            console.error('Error fetching help requests:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchHelpRequests();
+
+        document.getElementById('addHelpRequest').addEventListener('click', function() {
+            document.getElementById('helpId').value = '';
+            document.getElementById('helpMessage').value = '';
+            document.getElementById('helpResponse').value = '';
+            document.getElementById('helpStatus').value = 'Pending';
+            document.getElementById('helpUserId').value = '';
+            $('#helpModal').modal('show');
+        });
+
+        document.getElementById('saveHelpRequest').addEventListener('click', async function() {
+            const helpId = document.getElementById('helpId').value;
+            const message = document.getElementById('helpMessage').value;
+            const response = document.getElementById('helpResponse').value;
+            const status = document.getElementById('helpStatus').value;
+            const userId = document.getElementById('helpUserId').value;
+            const method = helpId ? 'PUT' : 'POST';
+            const url = '/api/help_requests';
+            const payload = helpId ? { id: helpId, message: message, response: response, status: status, user_id: userId } : { message: message, response: response, status: status, user_id: userId };
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    fetchHelpRequests();
+                    $('#helpModal').modal('hide');
+                } else {
+                    alert('Failed to save help request.');
+                }
+            } catch (error) {
+                console.error('Error saving help request:', error);
+            }
+        });
+
+        document.getElementById('confirmDelete').addEventListener('click', async function() {
+            const helpId = document.getElementById('deleteHelpId').value;
+
+            try {
+                const response = await fetch('/api/help_requests', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: helpId })
+                });
+                if (response.ok) {
+                    fetchHelpRequests();
+                    $('#deleteModal').modal('hide');
+                } else {
+                    alert('Failed to delete help request.');
+                }
+            } catch (error) {
+                console.error('Error deleting help request:', error);
+            }
+        });
+
+        document.getElementById('helpBody').addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains('edit-btn')) {
+                const helpId = e.target.getAttribute('data-id');
+                const row = e.target.closest('tr');
+                document.getElementById('helpId').value = helpId;
+                document.getElementById('helpMessage').value = row.getAttribute('data-message');
+                document.getElementById('helpResponse').value = row.getAttribute('data-response');
+                document.getElementById('helpStatus').value = row.getAttribute('data-status');
+                document.getElementById('helpUserId').value = row.getAttribute('data-user-id');
+                $('#helpModal').modal('show');
+            } else if (e.target && e.target.classList.contains('delete-btn')) {
+                const helpId = e.target.getAttribute('data-id');
+                document.getElementById('deleteHelpId').value = helpId;
+                $('#deleteModal').modal('show');
+            }
+        });
+    });
+</script>
+{% endblock %}

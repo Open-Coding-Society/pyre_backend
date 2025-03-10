@@ -1,0 +1,77 @@
+{% extends "layouts/base.html" %}
+{% set project = "Settings" %}
+
+{% block style %}
+    <style>
+        :root {
+            --primary-color: #ff0000; /* Red */
+            --secondary-color: #ffffff; /* White */
+            --accent-color: #000000; /* Black */
+            --background-color: #1a1a1a; /* Dark background */
+            --card-background-color: #333333; /* Darker card background */
+            --card-text-color: #ffffff; /* White text */
+            --btn-primary-color: #ff0000; /* Red button */
+            --btn-primary-hover-color: #cc0000; /* Darker red on hover */
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--secondary-color);
+        }
+
+        .card {
+            background-color: var(--card-background-color);
+            color: var(--card-text-color);
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            background-color: var(--btn-primary-color);
+            border-color: var(--btn-primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--btn-primary-hover-color);
+            border-color: var(--btn-primary-hover-color);
+        }
+
+        h1, h5 {
+            color: var(--primary-color);
+        }
+
+        .mark {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <h1><strong>Admin Settings</strong></h1>
+        <div class="row">
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">General Settings</h5>
+                        <p class="card-text">
+                            Configure general application settings such as description and contact information.
+                        </p>
+                        <a href="{{ url_for('general_settings') }}" class="btn btn-primary">Edit General Settings</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">User Management</h5>
+                        <p class="card-text">
+                            Manage user roles and permissions. Add, edit, or remove users and assign roles.
+                        </p>
+                        <a href="{{ url_for('utable') }}" class="btn btn-primary">Manage Users</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

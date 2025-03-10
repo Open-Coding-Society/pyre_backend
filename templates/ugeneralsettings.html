@@ -1,0 +1,84 @@
+{% extends "layouts/base.html" %}
+{% set project = "General Settings" %}
+
+{% block style %}
+    <style>
+        :root {
+            --primary-color: #ff0000; /* Red */
+            --secondary-color: #ffffff; /* White */
+            --accent-color: #000000; /* Black */
+            --background-color: #1a1a1a; /* Dark background */
+            --card-background-color: #333333; /* Darker card background */
+            --card-text-color: #ffffff; /* White text */
+            --btn-primary-color: #ff0000; /* Red button */
+            --btn-primary-hover-color: #cc0000; /* Darker red on hover */
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--secondary-color);
+        }
+
+        .card {
+            background-color: var(--card-background-color);
+            color: var(--card-text-color);
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            background-color: var(--btn-primary-color);
+            border-color: var(--btn-primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--btn-primary-hover-color);
+            border-color: var(--btn-primary-hover-color);
+        }
+
+        h1, h5 {
+            color: var(--primary-color);
+        }
+
+        .mark {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <h1><strong>General Settings</strong></h1>
+        <form method="POST" action="{{ url_for('general_settings') }}">
+            <div class="row">
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Description</h5>
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea class="form-control" id="description" name="description">{{ settings.description }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Contact Information</h5>
+                            <div class="form-group">
+                                <label for="contactEmail">Contact Email</label>
+                                <input type="email" class="form-control" id="contactEmail" name="contact_email" value="{{ settings.contact_email }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="contactPhone">Contact Phone</label>
+                                <input type="text" class="form-control" id="contactPhone" name="contact_phone" value="{{ settings.contact_phone }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Save Settings</button>
+        </form>
+    </div>
+{% endblock %}

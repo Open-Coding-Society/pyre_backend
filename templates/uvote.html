@@ -1,0 +1,166 @@
+{% extends "layouts/base.html" %}
+
+{% block body %}
+
+<div class="container mt-5">
+    <h1>Vote Management</h1>
+    <table class="table table-striped" id="voteTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Post ID</th>
+                <th>User ID</th>
+                <th>Vote Type</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="voteBody">
+            <!-- Votes will be dynamically inserted here -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal for adding/editing a vote -->
+<div class="modal fade" id="voteModal" tabindex="-1" role="dialog" aria-labelledby="voteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="voteModalLabel">Vote</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="voteForm">
+                    <input type="hidden" id="voteId">
+                    <div class="form-group">
+                        <label for="voteType">Vote Type</label>
+                        <select class="form-control" id="voteType">
+                            <option value="upvote">Upvote</option>
+                            <option value="downvote">Downvote</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="postId" value="1">
+                    <button type="button" class="btn btn-primary" id="saveVote">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for delete confirmation -->
+<div class="modal fade" id="deleteVoteModal" tabindex="-1" aria-labelledby="deleteVoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteVoteModalLabel">Delete Vote</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this vote?</p>
+                <input type="hidden" id="deleteVoteId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteVote">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block background %}
+<script>
+    async function fetchVotes() {
+        try {
+            const voteBody = document.getElementById('voteBody');
+            voteBody.innerHTML = ''; // Clear table before loading new data
+
+            for (let postId = 1; postId <= 10; postId++) {  // Loop through post IDs 1 to 10
+                const response = await fetch(`/api/votemet/post?post_id=${postId}`);
+                if (!response.ok) throw new Error(`Failed to fetch votes for post ${postId}`);
+                const votes = await response.json();
+
+                votes.upvotes.forEach(vote => {
+                    voteBody.innerHTML += `
+                        <tr data-id="${vote.id}">
+                            <td>${vote.id}</td>
+                            <td>${vote.post_id}</td>
+                            <td>${vote.user_id}</td>
+                            <td class="vote-type">Upvote</td>
+                            <td>
+                                <button class="btn btn-danger delete-btn" data-id="${vote.id}">Remove Vote</button>
+                            </td>
+                        </tr>`;
+                });
+
+                votes.downvotes.forEach(vote => {
+                    voteBody.innerHTML += `
+                        <tr data-id="${vote.id}">
+                            <td>${vote.id}</td>
+                            <td>${vote.post_id}</td>
+                            <td>${vote.user_id}</td>
+                            <td class="vote-type">Downvote</td>
+                            <td>
+                                <button class="btn btn-danger delete-btn" data-id="${vote.id}">Remove Vote</button>
+                            </td>
+                        </tr>`;
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching votes:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchVotes();
+
+        document.getElementById('addVote').addEventListener('click', function() {
+            document.getElementById('voteId').value = '';
+            document.getElementById('voteType').value = 'upvote';
+            $('#voteModal').modal('show');
+        });
+
+        document.getElementById('saveVote').addEventListener('click', async function() {
+            const voteId = document.getElementById('voteId').value;
+            const voteType = document.getElementById('voteType').value;
+            const postId = document.getElementById('postId').value;
+            const method = voteId ? 'PUT' : 'POST';
+            const url = '/api/votemet';
+            const payload = voteId ? { post_id: voteId, vote_type: voteType } : { post_id: postId, vote_type: voteType };
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    fetchVotes();
+                    $('#voteModal').modal('hide');
+                }
+            } catch (error) {
+                console.error('Error saving vote:', error);
+            }
+        });
+
+        document.getElementById('confirmDeleteVote').addEventListener('click', async function() {
+            const voteId = document.getElementById('deleteVoteId').value;
+            try {
+                const response = await fetch('/api/votemet', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ post_id: voteId })
+                });
+                if (response.ok) {
+                    fetchVotes();
+                    $('#deleteVoteModal').modal('hide');
+                }
+            } catch (error) {
+                console.error('Error deleting vote:', error);
+            }
+        });
+    });
+</script>
+{% endblock %}
