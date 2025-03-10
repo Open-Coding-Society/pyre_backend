@@ -1,0 +1,149 @@
+{% extends "layouts/base.html" %}
+{% set project = "About" %}
+
+{% block style %}
+    <style>
+        :root {
+            --primary-color: #ff0000; /* Red */
+            --secondary-color: #ffffff; /* White */
+            --accent-color: #000000; /* Black */
+            --background-color: #1a1a1a; /* Dark background */
+            --card-background-color: #333333; /* Darker card background */
+            --card-text-color: #ffffff; /* White text */
+            --btn-primary-color: #ff0000; /* Red button */
+            --btn-primary-hover-color: #cc0000; /* Darker red on hover */
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--secondary-color);
+        }
+
+        .card {
+            background-color: var(--card-background-color);
+            color: var(--card-text-color);
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            background-color: var(--btn-primary-color);
+            border-color: var(--btn-primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--btn-primary-hover-color);
+            border-color: var(--btn-primary-hover-color);
+        }
+
+        h1, h5 {
+            color: var(--primary-color);
+        }
+
+        .mark {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <h1><strong>About Our Features</strong></h1>
+        <div class="row">
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">User Management API</h5>
+                        <p class="card-text">
+                            The User Management API allows administrators to manage users, roles, and permissions. It provides endpoints for creating, updating, deleting, and retrieving user information.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Settings API</h5>
+                        <p class="card-text">
+                            The Settings API allows you to configure application settings and preferences. It provides endpoints for retrieving and updating various configuration settings.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Reports API</h5>
+                        <p class="card-text">
+                            The Reports API allows you to generate and view reports. It provides endpoints for creating, retrieving, and managing reports on various aspects of the application.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Chat API</h5>
+                        <p class="card-text">
+                            The Chat API allows users to send and receive messages in real-time. It provides endpoints for creating, retrieving, updating, and deleting chat messages.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Group API</h5>
+                        <p class="card-text">
+                            The Group API allows users to manage groups. It provides endpoints for creating, retrieving, updating, and deleting groups, as well as adding and removing group members.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Language API</h5>
+                        <p class="card-text">
+                            The Language API allows users to manage programming languages. It provides endpoints for creating, retrieving, updating, and deleting language entries.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Vote API</h5>
+                        <p class="card-text">
+                            The Vote API allows users to upvote or downvote posts. It provides endpoints for creating, retrieving, updating, and deleting votes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Post API</h5>
+                        <p class="card-text">
+                            The Post API allows users to create and manage posts. It provides endpoints for creating, retrieving, updating, and deleting posts.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Interests API</h5>
+                        <p class="card-text">
+                            The Interests API allows users to manage their interests. It provides endpoints for creating, retrieving, updating, and deleting user interests.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends "layouts/base.html" %}
+
+{% block body %}
+
+<div class="container mt-5">
+    <h1>Language Management</h1>
+    <button class="btn btn-success mb-3" id="addLanguage">Add Language</button>
+    <table class="table table-striped" id="languageTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Creator</th>
+                <th>Popularity</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="languageBody">
+            <!-- Language data will be dynamically inserted here -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal for adding/editing a language -->
+<div class="modal fade" id="languageModal" tabindex="-1" role="dialog" aria-labelledby="languageModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="languageModalLabel">Language</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="languageForm">
+                    <input type="hidden" id="languageId">
+                    <div class="form-group">
+                        <label for="languageName">Name</label>
+                        <input type="text" class="form-control" id="languageName">
+                    </div>
+                    <div class="form-group">
+                        <label for="languageCreator">Creator</label>
+                        <input type="text" class="form-control" id="languageCreator">
+                    </div>
+                    <div class="form-group">
+                        <label for="languagePopularity">Popularity</label>
+                        <input type="number" class="form-control" id="languagePopularity">
+                    </div>
+                    <button type="button" class="btn btn-primary" id="saveLanguage">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for delete confirmation -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Delete Language</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this language?</p>
+                <input type="hidden" id="deleteLanguageId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block background %}
+<script>
+    async function fetchLanguages() {
+        try {
+            const response = await fetch(`/api/languagemet`);
+            if (!response.ok) throw new Error('Failed to fetch languages');
+            const languages = await response.json();
+            const languageBody = document.getElementById('languageBody');
+            languageBody.innerHTML = '';
+            languages.forEach(language => {
+                languageBody.innerHTML += `
+                    <tr data-id="${language.id}">
+                        <td>${language.id}</td>
+                        <td>${language.name}</td>
+                        <td>${language.creator}</td>
+                        <td>${language.popularity}</td>
+                        <td>
+                            <button class="btn btn-primary edit-btn" data-id="${language.id}">Edit</button>
+                            <button class="btn btn-danger delete-btn" data-id="${language.id}">Delete</button>
+                        </td>
+                    </tr>`;
+            });
+        } catch (error) {
+            console.error('Error fetching languages:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchLanguages();
+
+        document.getElementById('addLanguage').addEventListener('click', function() {
+            document.getElementById('languageId').value = '';
+            document.getElementById('languageName').value = '';
+            document.getElementById('languageCreator').value = '';
+            document.getElementById('languagePopularity').value = 0;
+            $('#languageModal').modal('show');
+        });
+
+        document.getElementById('saveLanguage').addEventListener('click', async function() {
+            const languageId = document.getElementById('languageId').value;
+            const name = document.getElementById('languageName').value;
+            const creator = document.getElementById('languageCreator').value;
+            const popularity = document.getElementById('languagePopularity').value;
+            const method = languageId ? 'PUT' : 'POST';
+            const url = '/api/languagemet';
+            const payload = languageId ? { id: languageId, name: name, creator: creator, popularity: popularity } : { name: name, creator: creator, popularity: popularity };
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    fetchLanguages();
+                    $('#languageModal').modal('hide');
+                } else {
+                    alert('Failed to save language.');
+                }
+            } catch (error) {
+                console.error('Error saving language:', error);
+            }
+        });
+
+        document.getElementById('confirmDelete').addEventListener('click', async function() {
+            const languageId = document.getElementById('deleteLanguageId').value;
+
+            try {
+                const response = await fetch('/api/languagemet', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: languageId })
+                });
+                if (response.ok) {
+                    fetchLanguages();
+                    $('#deleteModal').modal('hide');
+                } else {
+                    alert('Failed to delete language.');
+                }
+            } catch (error) {
+                console.error('Error deleting language:', error);
+            }
+        });
+
+        document.getElementById('languageBody').addEventListener('click', function(e) {
+            if (e.target && e.target.classList.contains('edit-btn')) {
+                const languageId = e.target.getAttribute('data-id');
+                const row = e.target.closest('tr');
+                document.getElementById('languageId').value = languageId;
+                document.getElementById('languageName').value = row.children[1].innerText;
+                document.getElementById('languageCreator').value = row.children[2].innerText;
+                document.getElementById('languagePopularity').value = row.children[3].innerText;
+                $('#languageModal').modal('show');
+            } else if (e.target && e.target.classList.contains('delete-btn')) {
+                const languageId = e.target.getAttribute('data-id');
+                document.getElementById('deleteLanguageId').value = languageId;
+                $('#deleteModal').modal('show');
+            }
+        });
+    });
+</script>
+{% endblock %}
