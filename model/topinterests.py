@@ -108,7 +108,7 @@ def initTopInterests():
             {"_interests": "Nature", "count": 4},
         ]
 
-        for interest_data in initial_data:
+        for interest_data in top_interests:
             try:
                 top_interest = TopInterest(**interest_data)
                 db.session.add(top_interest)
