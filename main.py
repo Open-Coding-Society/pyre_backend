@@ -36,6 +36,7 @@ from api.post_met import post_met_api
 from api.poll_met import poll_met_api
 from api.health import health_api
 from api.help import help_api
+from api.titanic import titanic_api  # Import the titanic API
 
 from api.leaderboard import leaderboard_api
 
@@ -59,6 +60,8 @@ from model.help_request import HelpRequest, initHelpRequests
 from model.topusers import TopUser
 from model.topinterests import TopInterest, initTopInterests
 from model.usettings import Settings  # Import the Settings model
+from model.titanic import TitanicModel  # Import the TitanicModel class
+from model.titanic import Passenger, initPassengers
 # server only Views
 
 # register URIs for api endpoints
@@ -85,6 +88,7 @@ app.register_blueprint(post_met_api)
 app.register_blueprint(poll_met_api)
 app.register_blueprint(help_api)
 app.register_blueprint(health_api)
+app.register_blueprint(titanic_api)
 
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
@@ -292,6 +296,8 @@ def generate_data():
     initLanguages()
     initPolls()
     initHelpRequests()
+    initLanguages() 
+    initPassengers()
     
 # Backup the old database
 def backup_database(db_uri, backup_uri):
@@ -319,6 +325,8 @@ def extract_data():
         data['languages'] = [language.read() for language in Language.query.all()]
         data['top_interests'] = [top_interest.read() for top_interest in TopInterest.query.all()]
         data['polls'] = [poll.read() for poll in Poll.query.all()]
+        data['titanic'] = [titanic.read() for titanic in TitanicModel.query.all()]
+        data['passengers'] = [passenger.read() for passenger in Passenger.query.all()] 
     return data
 
 # Save extracted data to JSON files
@@ -352,6 +360,7 @@ def restore_data(data):
         # _ = Player.restore(data['player'])
         _ = TopInterest.restore(data['top_interests'])
         _ = Language.restore(data['languages'])
+        _ = Passenger.restore(data['passengers'])
     print("Data restored to the new database.")
 
 # Define a command to backup data
