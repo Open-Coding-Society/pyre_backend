@@ -1,30 +1,30 @@
-# CSP Tri 3 - Pilot City Project
+# CSP Tri 3 - Pyre Wildfire Prediction Project
 
 ## Project Overview
 
-Welcome to our AP Computer Science Principles Trimester 3 repository! The main focus of this project is the Qualcomm Autonomous Vehicle Navigation Enhancement (Pilot City).
+Welcome to our AP Computer Science Principles Trimester 3 repository! The main focus of this project is **Pyre**, an AI-driven wildfire prediction and risk assessment system.
 
-### Qualcomm Autonomous Vehicle Navigation Enhancement
+### Pyre: AI Wildfire Prediction and Mitigation
 
-We're developing a machine learning application that leverages Poway's Open Data Portal transportation data to enhance autonomous vehicle navigation. Our goal is to reduce travel time by 20% for local commuters through:
+We're developing a machine learning application that leverages geospatial and environmental data to predict and mitigate the impact of wildfires. Our goal is to improve response time and preparedness by providing accurate fire risk assessments through:
 
-- Predictive traffic flow models
-- Real-time route optimization algorithms
-- Adaptive speed control systems
+- Predictive wildfire models
+- Real-time fire risk mapping
+- Adaptive emergency response recommendations
 
-This project showcases Qualcomm's cutting-edge technology in real-world scenarios while addressing practical transportation challenges in our community.
+This project integrates cutting-edge AI and data analysis techniques to enhance wildfire management and public safety.
 
 ## Repository Structure
 
 This project is split across two repositories:
 
-- Backend Repository: Contains API endpoints, ML models, and data processing
-- Frontend Repository: Contains user interfaces, visualization components, and API integrations
+- **Backend Repository**: Contains API endpoints, ML models, and data processing
+- **Frontend Repository**: Contains user interfaces, visualization components, and API integrations
 
 ## Project Timeline
 
-- **Week 1 (March 12-21)**: Discovery, Planning, Setup, and Titanic Model Adaptation
-- **March 23 - April 12**: Pilot City Data Integration
+- **Week 1 (March 12-21)**: Discovery, Planning, Setup, and Initial Data Exploration
+- **March 23 - April 12**: Environmental Data Integration
 - **March 23 - April 19**: ML Model Development
 - **March 30 - April 19**: Backend Development
 - **April 6 - April 26**: Frontend Development
@@ -36,33 +36,33 @@ This project is split across two repositories:
 
 ## Key Features
 
-1. **Traffic Prediction System**
-   - Forecasts congestion based on historical patterns
-   - Incorporates weather and event data
-   - Provides both short-term and long-term predictions
+1. **Wildfire Prediction System**
+   - Forecasts fire risk based on historical and real-time environmental data
+   - Uses machine learning models trained on temperature, humidity, and wind conditions
+   - Provides both short-term and long-term fire risk predictions
 
-2. **Route Optimization Engine**
-   - Dynamically calculates optimal routes
-   - Considers multiple parameters (time, distance, fuel efficiency)
-   - Learns from past journeys to improve accuracy
+2. **Fire Risk Mapping**
+   - Dynamically generates fire risk heatmaps
+   - Integrates satellite and sensor data for real-time updates
+   - Helps emergency services prioritize high-risk areas
 
-3. **Adaptive Speed Control**
-   - Recommends optimal speeds based on traffic flow
-   - Predicts traffic light timing
-   - Calculates safe following distances
+3. **Adaptive Emergency Response System**
+   - Recommends evacuation routes based on fire progression
+   - Identifies optimal locations for firefighting resources
+   - Uses AI to enhance response time and efficiency
 
 4. **User Interfaces**
-   - Web dashboard for administrators
-   - Mobile app for commuters
-   - Vehicle HUD interface
+   - Web dashboard for emergency management teams
+   - Mobile app for public alerts and safety recommendations
+   - Interactive map for real-time fire risk visualization
 
 ## Getting Started
 
 ### Backend Setup
 1. **Clone the backend repository:**
    ```
-   git clone https://github.com/your-team/csp-tri3-pilot-city-backend.git
-   cd csp-tri3-pilot-city-backend
+   git clone https://github.com/your-team/pyre-backend.git
+   cd pyre-backend
    ```
 
 2. **Create and activate a virtual environment:**
@@ -85,7 +85,6 @@ This project is split across two repositories:
 1. **Clone the frontend repository:**
    ```
    git clone https://github.com/examplelink.git
- 
    ```
 
 2. **Use the Makefile to set up and run:**
@@ -107,3 +106,4 @@ This project is part of our AP Computer Science Principles coursework.
 ## License
 
 This project is for educational purposes only.
+
