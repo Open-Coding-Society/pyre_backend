@@ -202,7 +202,6 @@ custom_cli = AppGroup('custom', help='Custom commands')
 def generate_data():
     initUsers()
     initSections()
-    initChannels()
     initPosts()
     initTeamMembers()
     initPassengers()
