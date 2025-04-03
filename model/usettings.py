@@ -122,7 +122,7 @@ def initSettings():
         db.create_all()
         """Static data for table"""
         static_data = [
-            Settings(description='A platform that evolves around your connections and creativity.', contact_email='pparikh@gmail.com', contact_phone='123-456-7890')
+            Settings(description='A platform that evolves around your connections and creativity.', contact_email='pyre.ai.help@gmail.com', contact_phone='123-456-7890')
         ]
         
         for data in static_data:
