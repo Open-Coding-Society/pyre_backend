@@ -175,12 +175,12 @@ def initGroups():
             Group(name='Support', section_id=home_page_section.id, moderators=[User.query.get(1)])
         ]
         
-        #Prism groups
-        prism_section = Section.query.filter_by(_name='Prism').first()
+        #Pyre groups
+        Pyre = Section.query.filter_by(_name='Pyre').first()
         groups += [
-            Group(name='Random Chatroom', section_id=prism_section.id, moderators=[User.query.get(1)]),
-            Group(name='Daily Question', section_id=prism_section.id, moderators=[User.query.get(1)]),
-            Group(name='Interests', section_id=prism_section.id, moderators=[User.query.get(1)])
+            Group(name='Random Chatroom', section_id=Pyre.id, moderators=[User.query.get(1)]),
+            Group(name='Daily Question', section_id=Pyre.id, moderators=[User.query.get(1)]),
+            Group(name='Interests', section_id=Pyre.id, moderators=[User.query.get(1)])
         ]
 
         for group in groups:

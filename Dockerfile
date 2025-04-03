@@ -1,6 +1,6 @@
 FROM docker.io/python:3.12
 
-WORKDIR /home/ubuntu/prism_backend
+WORKDIR /home/ubuntu/QcommVNE_backend
 
 RUN ./scripts/db_backup.py
 RUN ./scripts/db_init.py

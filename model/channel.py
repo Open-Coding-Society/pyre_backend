@@ -161,17 +161,17 @@ def initChannels():
         ]
         
 
-        #Prism Channels
+        #Pyre Channels
         random_chatroom = Group.query.filter_by(_name='Random Chatroom').first()
         daily_question = Group.query.filter_by(_name='Daily Question').first()
         interestchannel = Group.query.filter_by(_name='Interests').first()
-        prism_channels = [
+        Pyre = [
             Channel(name='How can readers impact the world through inventions?', group_id=random_chatroom.id),
             Channel(name='Daily Question', group_id=daily_question.id),
             Channel(name='Interests', group_id=interestchannel.id)
         ]
         
-        channels = home_page_channels + prism_channels
+        channels = home_page_channels + Pyre_channels
         
         for channel in channels:
             try:
