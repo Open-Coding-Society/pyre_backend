@@ -1,9 +1,3 @@
-<!-- Custom file for standardizing Project Data
-This HTML is setup as as a Jinja2 layout, coders use layouts for:
- ... standardization of style
- ... setting expectations for data
- ... code reuse
--->
 <!DOCTYPE HTML>
 <html lang="en">
 
@@ -13,31 +7,54 @@ This HTML is setup as as a Jinja2 layout, coders use layouts for:
 {% set youtube = "https://www.youtube.com/channel/UClIKOsDS5dsfzFA3zveDT3Q?view_as=subscriber" %}
 
 <head>
-    <!-- Required meta tags -->
+    <!-- Meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ basename }} | {{ project }}</title>
 
-    <!-- JQuery -->
-    <script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
-    <script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-
+    <!-- CSS Libraries -->
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" 
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- DataTables CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <!-- Bootstrap JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    <script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <!-- JavaScript Libraries -->
+    <!-- JQuery -->
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <!-- DataTables JS -->
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" 
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
     {% block head %}
     {% endblock %}
       
     <style>
-        .navbar {
-            position: static;
-            z-index: 9999;
+        /* Color variables */
+        :root {
+            --main-bg-color: #000000;
+            --main-text-color: #ffffff;
+            --main-accent-color: #FF0000;
+            --secondary-accent-color: #8B0000;
+            --nav-bg-color: rgba(20, 20, 20, 0.9);
+            --card-bg-color: rgba(40, 40, 40, 0.8);
+            --form-bg-color: rgba(40, 40, 40, 0.8);
+            --form-focus-bg-color: rgba(60, 60, 60, 0.8);
         }
+        
+        /* Base styling */
+        body {
+            background-color: var(--main-bg-color);
+            color: var(--main-text-color);
+            font-family: 'Arial', sans-serif;
+        }
+        
+        /* Background animation container */
         #body_background {
             position: fixed;
             top: 0;
@@ -46,39 +63,117 @@ This HTML is setup as as a Jinja2 layout, coders use layouts for:
             height: 100%;
             z-index: -1;
         }
+        
+        /* Navigation styling */
+        .navbar {
+            position: static;
+            z-index: 9999;
+            background-color: var(--nav-bg-color) !important;
+            box-shadow: 0 2px 10px rgba(255, 0, 0, 0.3);
+        }
+        
+        .navbar-brand, .nav-link {
+            color: var(--main-text-color) !important;
+        }
+        
+        .nav-link:hover, .navbar-brand:hover {
+            color: var(--main-accent-color) !important;
+        }
+        
+        .active .nav-link {
+            color: var(--main-accent-color) !important;
+            font-weight: bold;
+        }
+        
+        /* Button styling */
+        .btn-primary {
+            background-color: var(--main-accent-color) !important;
+            border-color: var(--main-accent-color) !important;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-accent-color) !important;
+            border-color: var(--secondary-accent-color) !important;
+        }
+        
+        /* Link styling */
+        a {
+            color: var(--main-accent-color);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            color: var(--secondary-accent-color);
+            text-decoration: underline;
+        }
+        
+        /* Card styling */
+        .card {
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--main-accent-color);
+        }
+        
+        /* Table styling */
+        .table {
+            color: var(--main-text-color);
+        }
+        
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+        
+        /* Form control styling */
+        .form-control {
+            background-color: var(--form-bg-color);
+            color: var(--main-text-color);
+            border: 1px solid var(--main-accent-color);
+        }
+        
+        .form-control:focus {
+            background-color: var(--form-focus-bg-color);
+            color: var(--main-text-color);
+            border-color: var(--main-accent-color);
+            box-shadow: 0 0 0 0.25rem rgba(255, 0, 0, 0.25);
+        }
     </style>
+
     {% block style %}
     {% endblock %}
-
-    <title>{{ basename }} | {{ project }} </title>
-
 </head>
 
 <body>
+    <!-- Background animation container -->
     <div id="body_background"></div>
 
+    <!-- Navigation bar -->
     {% include "layouts/navbar.html" %}
 
+    <!-- Main content -->
     {% block body %}
     {% endblock %}
 
+    <!-- Background animation scripts -->
+    {% block background %}
+        <script src="{{ url_for('static', filename='js/three.r119.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/vanta.birds.min.js') }}"></script>
+        <script>
+            VANTA.BIRDS({
+                el: "#body_background",
+                mouseControls: true,
+                touchControls: true,
+                gyroControls: false,
+                minHeight: 200.00,
+                minWidth: 200.00,
+                scale: 1.00,
+                scaleMobile: 1.00,
+                backgroundColor: 0x000000,
+                color1: 0xFF0000,
+                color2: 0x8B0000,
+                birdSize: 1.50,
+                wingSpan: 24.00,
+                separation: 36.00
+            })
+        </script>
+    {% endblock %}
 </body>
-
-{% block background %}
-    <script src="{{ url_for('static', filename='js/three.r119.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/vanta.birds.min.js') }}"></script>
-    <script>
-        VANTA.BIRDS({
-            el: "#body_background",
-            mouseControls: true,
-            touchControls: true,
-            gyroControls: false,
-            minHeight: 200.00,
-            minWidth: 200.00,
-            scale: 1.00,
-            scaleMobile: 1.00
-        })
-    </script>
-{% endblock %}
-
 </html>

@@ -2,47 +2,47 @@
 
 {% block body %}
 
-<div class="container mt-5">
-    <h1>User Management</h1>
-    <table class="table table-striped" id="userTable">
+<div class="container mt-5" style="margin-top: 3rem;">
+    <h1 style="color: #ffffff; margin-bottom: 1.5rem;">User Management</h1>
+    <table class="table" id="userTable" style="width: 100%; color: #ffffff; border-collapse: collapse;">
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>UID</th>
-                <th>Role</th>
-                <th>Profile Picture</th>
-                <th>Kasm Server Needed</th>
-                <th>Classes</th>
-                <th>Actions</th>
+            <tr style="background-color: rgba(255, 0, 0, 0.2);">
+                <th style="padding: 0.75rem; border-bottom: 2px solid #FF0000;">ID</th>
+                <th style="padding: 0.75rem; border-bottom: 2px solid #FF0000;">Name</th>
+                <th style="padding: 0.75rem; border-bottom: 2px solid #FF0000;">UID</th>
+                <th style="padding: 0.75rem; border-bottom: 2px solid #FF0000;">Role</th>
+                <th style="padding: 0.75rem; border-bottom: 2px solid #FF0000;">Profile Picture</th>
+                <th style="padding: 0.75rem; border-bottom: 2px solid #FF0000;">Kasm Server Needed</th>
+                <th style="padding: 0.75rem; border-bottom: 2px solid #FF0000;">Classes</th>
+                <th style="padding: 0.75rem; border-bottom: 2px solid #FF0000;">Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for user in user_data %}
             {% if user.id == current_user.id or current_user.role == 'Admin' %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.name }}</td>
-                <td>{{ user.uid }}</td>
-                <td>{{ user.role }}</td>
-                <td>
+            <tr style="background-color: {% if loop.index is divisibleby 2 %}rgba(40, 40, 40, 0.8){% else %}rgba(255, 0, 0, 0.1){% endif %};">
+                <td style="padding: 0.75rem; border-top: 1px solid rgba(255, 0, 0, 0.3);">{{ user.id }}</td>
+                <td style="padding: 0.75rem; border-top: 1px solid rgba(255, 0, 0, 0.3);">{{ user.name }}</td>
+                <td style="padding: 0.75rem; border-top: 1px solid rgba(255, 0, 0, 0.3);">{{ user.uid }}</td>
+                <td style="padding: 0.75rem; border-top: 1px solid rgba(255, 0, 0, 0.3);">{{ user.role }}</td>
+                <td style="padding: 0.75rem; border-top: 1px solid rgba(255, 0, 0, 0.3);">
                     {% if user.pfp %}
-                    <img src="{{ url_for('uploaded_file', filename=user.uid + '/' + user.pfp) }}" alt="Profile Picture" class="img-thumbnail" style="width: 50px; height: 50px;">
+                    <img src="{{ url_for('uploaded_file', filename=user.uid + '/' + user.pfp) }}" alt="Profile Picture" style="width: 50px; height: 50px; border-radius: 4px; border: 1px solid #FF0000;">
                     {% else %}
-                    <img src="{{ url_for('static', filename='assets/pythondb.png') }}" alt="Default Profile Picture" class="img-thumbnail" style="width: 50px; height: 50px;">
+                    <img src="{{ url_for('static', filename='assets/pythondb.png') }}" alt="Default Profile Picture" style="width: 50px; height: 50px; border-radius: 4px; border: 1px solid #FF0000;">
                     {% endif %}
                 </td>
-                <td id="kasm-{{ user.id }}">{{ user.kasm_server_needed }}</td>
-                <td>
+                <td id="kasm-{{ user.id }}" style="padding: 0.75rem; border-top: 1px solid rgba(255, 0, 0, 0.3);">{{ user.kasm_server_needed }}</td>
+                <td style="padding: 0.75rem; border-top: 1px solid rgba(255, 0, 0, 0.3);">
                     {% for section in user.sections %}
                     {{ section.abbreviation }}{% if not loop.last %}, {% endif %}
                     {% endfor %}
                 </td>
-                <td>
-                    <button class="btn btn-primary edit-btn" data-id="{{ user.id }}">Edit</button>
+                <td style="padding: 0.75rem; border-top: 1px solid rgba(255, 0, 0, 0.3);">
+                    <button class="edit-btn" data-id="{{ user.id }}" style="background-color: #FF0000; color: white; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 3px; cursor: pointer;">Edit</button>
                     {% if current_user.role == 'Admin' %}
-                    <button class="btn btn-danger delete-btn" data-id="{{ user.id }}">Delete</button>
-                    <button class="btn btn-warning reset-password-btn" data-id="{{ user.id }}">Reset Password</button>
+                    <button class="delete-btn" data-id="{{ user.id }}" style="background-color: #8B0000; color: white; border: none; padding: 5px 10px; margin-right: 5px; border-radius: 3px; cursor: pointer;">Delete</button>
+                    <button class="reset-password-btn" data-id="{{ user.id }}" style="background-color: #FF8C00; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Reset Password</button>
                     {% endif %}
                 </td>                
             </tr>
@@ -53,42 +53,42 @@
 </div>
 
 <!-- Modal for edit form -->
-<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Edit User</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true" style="background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog" role="document" style="margin: 30px auto; max-width: 500px;">
+        <div class="modal-content" style="background-color: rgba(40, 40, 40, 0.95); color: #ffffff; border: 1px solid #FF0000;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 0, 0, 0.3); padding: 15px;">
+                <h5 class="modal-title" id="editModalLabel" style="color: #ffffff; margin: 0;">Edit User</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="background: none; border: none; color: #ffffff; font-size: 1.5rem;">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="padding: 15px;">
                 <form id="editUserForm">
                     <input type="hidden" id="userId">
-                    <div class="form-group">
-                        <label for="kasmServerNeeded">Kasm Server Needed</label>
-                        <select class="form-control" id="kasmServerNeeded">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="kasmServerNeeded" style="display: block; margin-bottom: 5px;">Kasm Server Needed</label>
+                        <select class="form-control" id="kasmServerNeeded" style="width: 100%; padding: 8px; background-color: rgba(60, 60, 60, 0.8); color: #ffffff; border: 1px solid #FF0000; border-radius: 3px;">
                             <option value="true">True</option>
                             <option value="false">False</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="csp">CSP</label>
-                        <input type="checkbox" id="csp">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="csp" style="display: inline-block; margin-right: 10px;">CSP</label>
+                        <input type="checkbox" id="csp" style="vertical-align: middle;">
                     </div>
-                    <div class="form-group">
-                        <label for="csa">CSA</label>
-                        <input type="checkbox" id="csa">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="csa" style="display: inline-block; margin-right: 10px;">CSA</label>
+                        <input type="checkbox" id="csa" style="vertical-align: middle;">
                     </div>
-                    <div class="form-group">
-                        <label for="robotics">Robotics</label>
-                        <input type="checkbox" id="robotics">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="robotics" style="display: inline-block; margin-right: 10px;">Robotics</label>
+                        <input type="checkbox" id="robotics" style="vertical-align: middle;">
                     </div>
-                    <div class="form-group">
-                        <label for="animation">Animation</label>
-                        <input type="checkbox" id="animation">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="animation" style="display: inline-block; margin-right: 10px;">Animation</label>
+                        <input type="checkbox" id="animation" style="vertical-align: middle;">
                     </div>
-                    <button type="button" class="btn btn-primary" id="saveChanges">Save changes</button>
+                    <button type="button" id="saveChanges" style="background-color: #FF0000; color: white; border: none; padding: 8px 15px; border-radius: 3px; cursor: pointer;">Save changes</button>
                 </form>
             </div>
         </div>
@@ -96,20 +96,22 @@
 </div>
 
 <!-- Modal for delete confirmation -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Delete User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true" style="background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog" style="margin: 30px auto; max-width: 500px;">
+        <div class="modal-content" style="background-color: rgba(40, 40, 40, 0.95); color: #ffffff; border: 1px solid #FF0000;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 0, 0, 0.3); padding: 15px;">
+                <h5 class="modal-title" id="deleteModalLabel" style="color: #ffffff; margin: 0;">Delete User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: none; color: #ffffff; font-size: 1.5rem;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this user?</p>
+            <div class="modal-body" style="padding: 15px;">
+                <p style="margin-bottom: 15px;">Are you sure you want to delete this user?</p>
                 <input type="hidden" id="deleteUserId">
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+            <div class="modal-footer" style="border-top: 1px solid rgba(255, 0, 0, 0.3); padding: 15px;">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal" style="background-color: #6c757d; color: white; border: none; padding: 8px 15px; margin-right: 10px; border-radius: 3px; cursor: pointer;">Close</button>
+                <button type="button" id="confirmDelete" style="background-color: #8B0000; color: white; border: none; padding: 8px 15px; border-radius: 3px; cursor: pointer;">Delete</button>
             </div>
         </div>
     </div>
@@ -118,12 +120,39 @@
 
 {% block background %}
 <script>
-    
     document.addEventListener('DOMContentLoaded', function() {
         const editButtons = document.querySelectorAll('.edit-btn');
         const deleteButtons = document.querySelectorAll('.delete-btn');
         const resetPasswordButtons = document.querySelectorAll('.reset-password-btn');
 
+        // Initialize DataTable with inline styling
+        try {
+            $('#userTable').DataTable({
+                "dom": '<"top"f>rt<"bottom"ip>',
+                "language": {
+                    "search": "_INPUT_",
+                    "searchPlaceholder": "Search users...",
+                },
+                "lengthChange": false,
+                "pageLength": 10,
+                "initComplete": function() {
+                    // Style the search input
+                    $('.dataTables_filter input').attr('style', 
+                        'background-color: rgba(60, 60, 60, 0.8) !important; ' +
+                        'color: #ffffff !important; ' +
+                        'border: 1px solid #FF0000 !important; ' +
+                        'border-radius: 3px !important; ' +
+                        'padding: 5px 10px !important; ' +
+                        'margin-bottom: 15px !important;'
+                    );
+                    
+                    // Style pagination
+                    $('.dataTables_paginate').attr('style', 'color: #ffffff !important;');
+                }
+            });
+        } catch(e) {
+            console.error("DataTables initialization error:", e);
+        }
 
         editButtons.forEach(button => {
             button.addEventListener('click', async function() {
@@ -134,7 +163,6 @@
                 document.getElementById('userId').value = userId;
 
                 // Fetch user's current classes (dummy example for checkboxes)
-                // Replace with actual fetch request based on your backend structure
                 const userClasses = {
                     csp: true,
                     csa: false,
@@ -147,7 +175,12 @@
                 document.getElementById('robotics').checked = userClasses.robotics;
                 document.getElementById('animation').checked = userClasses.animation;
 
-                $('#editModal').modal('show');
+                try {
+                    $('#editModal').modal('show');
+                } catch(e) {
+                    console.error("Modal show error:", e);
+                    alert("Error showing edit modal. Check console for details.");
+                }
             });
         });
 
@@ -167,8 +200,7 @@
                 classes: classes
             };
 
-            // Simulate server response (replace with actual fetch)
-            // Example: updating UI directly for demonstration
+            // Simulate server response
             updateUserData(userId, updatedData);
         });
 
@@ -181,7 +213,11 @@
             document.getElementById(`kasm-${userId}`).textContent = updatedData.kasmServerNeeded ? 'True' : 'False';
 
             // Close modal after updating
-            $('#editModal').modal('hide');
+            try {
+                $('#editModal').modal('hide');
+            } catch(e) {
+                console.error("Modal hide error:", e);
+            }
         }
 
         deleteButtons.forEach(button => {
@@ -189,7 +225,12 @@
                 const userId = this.getAttribute('data-id');
                 document.getElementById('deleteUserId').value = userId;
 
-                $('#deleteModal').modal('show');
+                try {
+                    $('#deleteModal').modal('show');
+                } catch(e) {
+                    console.error("Delete modal show error:", e);
+                    alert("Error showing delete modal. Check console for details.");
+                }
             });
         });
 
@@ -201,37 +242,42 @@
 
             // Remove the user row from the table
             document.querySelector(`button[data-id="${userId}"]`).closest('tr').remove();
-            $('#deleteModal').modal('hide');
+            
+            try {
+                $('#deleteModal').modal('hide');
+            } catch(e) {
+                console.error("Delete modal hide error:", e);
+            }
         });
 
         resetPasswordButtons.forEach(button => {
-        button.addEventListener('click', async function() {
-            const userId = this.getAttribute('data-id');
-            const confirmReset = confirm('Are you sure you want to reset the password for this user?');
+            button.addEventListener('click', async function() {
+                const userId = this.getAttribute('data-id');
+                const confirmReset = confirm('Are you sure you want to reset the password for this user?');
 
-            if (confirmReset) {
-                try {
-                    const response = await fetch(`/users/reset_password/${userId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                      //      'Authorization': 'Bearer ' + ''
+                if (confirmReset) {
+                    try {
+                        const response = await fetch(`/users/reset_password/${userId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                                // 'Authorization': 'Bearer ' + ''
+                            }
+                        });
+
+                        if (response.ok) {
+                            alert('Password reset successfully.');
+                        } else {
+                            const result = await response.json();
+                            alert('Failed to reset password: ' + result.error);
                         }
-                    });
-
-                    if (response.ok) {
-                        alert('Password reset successfully.');
-                    } else {
-                        const result = await response.json();
-                        alert('Failed to reset password: ' + result.error);
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('An error occurred while resetting the password.');
                     }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('An error occurred while resetting the password.');
                 }
-            }
+            });
         });
-    });
     });
 </script>
 {% endblock %}
