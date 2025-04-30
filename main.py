@@ -21,6 +21,7 @@ from api.usettings import settings_api
 from api.user_met import user_met_api
 from api.post_met import post_met_api
 from api.titanic import titanic_api  # Import the titanic API
+from api.weather import weather_api  # Import the weather API
 
 # database Initialization functions
 from model.user import User, initUsers
@@ -41,6 +42,7 @@ app.register_blueprint(post_api)
 app.register_blueprint(user_met_api)
 app.register_blueprint(post_met_api)
 app.register_blueprint(titanic_api)
+app.register_blueprint(weather_api)
 
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
