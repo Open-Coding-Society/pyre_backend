@@ -17,3 +17,8 @@ pymysql
 # psycopg2-binary
 python_dotenv
 boto3
+twilio
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
