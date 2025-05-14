@@ -34,6 +34,7 @@ from api.post_met import post_met_api
 from api.titanic import titanic_api  # Import the titanic API
 from api.weather import weather_api
 from api.email import email_api
+from api.fire import forest_fire_api
 
 # database Initialization functions
 from model.user import User, initUsers
@@ -45,6 +46,7 @@ from model.usettings import Settings  # Import the Settings model
 from model.titanic import TitanicModel  # Import the TitanicModel class
 from model.titanic import Passenger, initPassengers
 from model.email import Email, initEmail
+from model.fire import ForestFireModel, ForestFire
 # server only Views
 
 # register URIs for api endpoints
@@ -56,6 +58,7 @@ app.register_blueprint(post_met_api)
 app.register_blueprint(titanic_api)
 app.register_blueprint(weather_api)
 app.register_blueprint(email_api)
+app.register_blueprint(forest_fire_api)
 
 load_dotenv()
 
