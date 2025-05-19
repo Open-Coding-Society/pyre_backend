@@ -1,58 +1,61 @@
-import numpy as np
-import pandas as pd
-import joblib  # For loading the model
-from sklearn.ensemble import RandomForestRegressor
 from __init__ import app, db
 
-class EarthquakeModel:
-    _instance = None
+class Earthquake(db.Model):
+    """
+    Earthquake Model
 
-    @staticmethod
-    def get_instance():
-        if EarthquakeModel._instance is None:
-            EarthquakeModel()
-        return EarthquakeModel._instance
+    Represents a significant earthquake event with relevant attributes.
+    """
+    __tablename__ = 'earthquakes'
 
-    def __init__(self):
-        if EarthquakeModel._instance is not None:
-            raise Exception("This class is a singleton!")
-        else:
-            EarthquakeModel._instance = self
-            # Initialize the model
-            self.model = self._load_model()
-            self.time_map = {'morning': 0, 'afternoon': 1, 'evening': 2, 'night': 3}
-            self.plate_type_map = {'convergent': 0, 'divergent': 1, 'transform': 2, 'intraplate': 3}
-            self.soil_type_map = {'rock': 0, 'stiff_soil': 1, 'soft_soil': 2, 'alluvium': 3}
+    id = db.Column(db.Integer, primary_key=True)
+    time = db.Column(db.String, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    depth = db.Column(db.Float, nullable=False)
+    mag = db.Column(db.Float, nullable=False)
+    magType = db.Column(db.String, nullable=True)
+    place = db.Column(db.String, nullable=True)
+    type = db.Column(db.String, nullable=False)
 
-    def _load_model(self):
-        # Load the pre-trained model from a file
+    def __init__(self, time, latitude, longitude, depth, mag, magType, place, type):
+        self.time = time
+        self.latitude = latitude
+        self.longitude = longitude
+        self.depth = depth
+        self.mag = mag
+        self.magType = magType
+        self.place = place
+        self.type = type
+
+    def __repr__(self):
+        return f"Earthquake(id={self.id}, time='{self.time}', lat={self.latitude}, lon={self.longitude}, mag={self.mag})"
+
+    def create(self):
         try:
-            model = joblib.load('earthquake_model.pkl')  # Replace with your model file path
-            print("Model loaded successfully.")
-            return model
-        except FileNotFoundError:
-            raise Exception("Model file not found. Please ensure 'earthquake_model.pkl' exists.")
+            db.session.add(self)
+            db.session.commit()
         except Exception as e:
-            raise Exception(f"An error occurred while loading the model: {e}")
+            db.session.rollback()
+            raise e
 
-    def predict(self, earthquake_data):
-        # Prepare the input data for prediction
+    def delete(self):
         try:
-            features = np.array([
-                earthquake_data['latitude'],
-                earthquake_data['longitude'],
-                earthquake_data['depth'],
-                self.time_map[earthquake_data['time_of_day']],
-                earthquake_data['previous_magnitude'],
-                earthquake_data['distance_to_fault'],
-                self.plate_type_map[earthquake_data['plate_boundary_type']],
-                self.soil_type_map[earthquake_data['soil_type']]
-            ]).reshape(1, -1)
-
-            # Use the loaded model to make a prediction
-            predicted_magnitude = self.model.predict(features)[0]
-            return {"predicted_magnitude": predicted_magnitude}
-        except KeyError as e:
-            return {"error": f"Missing or invalid field: {e}"}
+            db.session.delete(self)
+            db.session.commit()
         except Exception as e:
-            return {"error": f"An error occurred during prediction: {e}"}
+            db.session.rollback()
+            raise e
+
+    def read(self):
+        return {
+            'id': self.id,
+            'time': self.time,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'depth': self.depth,
+            'mag': self.mag,
+            'magType': self.magType,
+            'place': self.place,
+            'type': self.type
+        }

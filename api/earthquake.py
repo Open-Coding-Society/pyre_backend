@@ -1,78 +1,119 @@
-import pandas as pd
-from flask import Flask, request, jsonify
-from flask_restful import Resource, Api
+from flask import Blueprint, request, jsonify
+from flask_restful import Api, Resource
+from model.earthquake import Earthquake
+from __init__ import db
+import json
 
-# Load the earthquakes.csv file
-earthquake_data_df = pd.read_csv('earthquakes.csv')
+# Define Blueprint
+earthquake_api = Blueprint('earthquake_api', __name__, url_prefix='/api/earthquake')
+api = Api(earthquake_api)
 
-app = Flask(__name__)
-api = Api(app)
+# Valid earthquake types to include
+VALID_TYPES = {'earthquake', 'explosion', 'nuclear explosion'}
 
-class EarthquakeModel:
-    _instance = None
+class EarthquakeAPI:
+    class _Create(Resource):
+        def post(self):
+            data = request.get_json()
+            required_fields = ['time', 'latitude', 'longitude', 'depth', 'mag', 'type']
 
-    @staticmethod
-    def get_instance():
-        if EarthquakeModel._instance is None:
-            EarthquakeModel._instance = EarthquakeModel()
-        return EarthquakeModel._instance
+            for field in required_fields:
+                if field not in data:
+                    return {"error": f"Missing field: {field}"}, 400
 
-    def predict(self, earthquake_data):
-        # Example prediction logic using the CSV data
-        # For simplicity, return a dummy prediction
-        return {"predicted_magnitude": 5.0}
+            if data['type'] not in VALID_TYPES:
+                return {"error": "Invalid earthquake type"}, 400
 
-class Predict(Resource):
-    def post(self):
-        """Predict earthquake magnitude"""
-        # Get the earthquake data from the request
-        earthquake_data = request.get_json()
+            try:
+                quake = Earthquake(
+                    time=data['time'],
+                    latitude=data['latitude'],
+                    longitude=data['longitude'],
+                    depth=data['depth'],
+                    mag=data['mag'],
+                    magType=data.get('magType'),
+                    place=data.get('place'),
+                    type=data['type']
+                )
+                quake.create()
+                return {"message": "Earthquake record created", "record": quake.read()}, 201
+            except Exception as e:
+                return {"error": str(e)}, 500
 
-        # Validate the earthquake data
-        required_fields = ['latitude', 'longitude', 'depth', 'time_of_day', 'previous_magnitude', 'distance_to_fault']
-        for field in required_fields:
-            if field not in earthquake_data:
-                return {"error": f"Missing required field: {field}"}, 400
+    class _Read(Resource):
+        def get(self, record_id=None):
+            try:
+                if record_id:
+                    quake = Earthquake.query.get(record_id)
+                    if quake:
+                        return quake.read()
+                    return {"error": "Earthquake record not found"}, 404
 
-        # Example: Check if the data matches any record in the CSV
-        matching_records = earthquake_data_df[
-            (earthquake_data_df['latitude'] == earthquake_data['latitude']) &
-            (earthquake_data_df['longitude'] == earthquake_data['longitude'])
-        ]
+                records = Earthquake.query.all()
+                return jsonify([q.read() for q in records])
+            except Exception as e:
+                return {"error": str(e)}, 500
 
-        if not matching_records.empty:
-            return {"message": "Matching record found in CSV", "data": matching_records.to_dict(orient='records')}, 200
+    class _Update(Resource):
+        def put(self, record_id):
+            quake = Earthquake.query.get(record_id)
+            if not quake:
+                return {"error": "Earthquake record not found"}, 404
 
-        # Get the singleton instance of the EarthquakeModel
-        earthquakeModel = EarthquakeModel.get_instance()
-        # Predict the magnitude
-        response = earthquakeModel.predict(earthquake_data)
+            data = request.get_json()
+            try:
+                for key, value in data.items():
+                    if hasattr(quake, key):
+                        setattr(quake, key, value)
+                db.session.commit()
+                return {"message": "Record updated", "record": quake.read()}
+            except Exception as e:
+                db.session.rollback()
+                return {"error": str(e)}, 500
 
-        # Return the response as JSON
-        return jsonify(response)
+    class _Delete(Resource):
+        def delete(self, record_id):
+            quake = Earthquake.query.get(record_id)
+            if not quake:
+                return {"error": "Earthquake record not found"}, 404
 
-class Create(Resource):
-    def post(self):
-        """Create a new earthquake record"""
-        # Get data from request body
-        earthquake_data = request.get_json()
+            try:
+                quake.delete()
+                return {"message": f"Record {record_id} deleted"}
+            except Exception as e:
+                return {"error": str(e)}, 500
 
-        # Validate the earthquake data
-        required_fields = ['latitude', 'longitude', 'depth', 'time_of_day', 'previous_magnitude', 
-                          'distance_to_fault', 'plate_boundary_type', 'soil_type', 'magnitude']
-        for field in required_fields:
-            if field not in earthquake_data:
-                return {"error": f"Missing required field: {field}"}, 400
+    class _RestoreFromFile(Resource):
+        def post(self):
+            try:
+                with open('data/earthquake_records.json') as f:
+                    records = json.load(f)
 
-        # Append the new record to the CSV file
-        new_record = pd.DataFrame([earthquake_data])
-        new_record.to_csv('earthquakes.csv', mode='a', header=False, index=False)
+                restored = 0
+                for rec in records:
+                    if rec.get('type') in VALID_TYPES:
+                        quake = Earthquake(
+                            time=rec.get('time'),
+                            latitude=rec.get('latitude'),
+                            longitude=rec.get('longitude'),
+                            depth=rec.get('depth'),
+                            mag=rec.get('mag'),
+                            magType=rec.get('magType'),
+                            place=rec.get('place'),
+                            type=rec.get('type')
+                        )
+                        try:
+                            quake.create()
+                            restored += 1
+                        except Exception:
+                            continue
+                return {"message": f"Restored {restored} records from file"}, 200
+            except Exception as e:
+                return {"error": str(e)}, 500
 
-        return {"message": "Earthquake record created successfully"}, 201
-
-# Add resources to the API
-api.add_resource(Predict, '/predict')
-api.add_resource(Create, '/create')
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    # Register endpoints
+    api.add_resource(_Create, '/record')
+    api.add_resource(_Read, '/records', '/record/<int:record_id>')
+    api.add_resource(_Update, '/record/<int:record_id>')
+    api.add_resource(_Delete, '/record/<int:record_id>')
+    api.add_resource(_RestoreFromFile, '/restore')
