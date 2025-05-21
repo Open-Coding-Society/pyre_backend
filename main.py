@@ -214,6 +214,8 @@ def reset_password(user_id):
         return jsonify({'message': 'Password reset successfully'}), 200
     return jsonify({'error': 'Password reset failed'}), 500
 
+##################### TWILIO CALLS #####################
+
 account_sid = os.environ.get('ACCOUNT_SID')
 auth_token = os.environ.get('AUTH_TOKEN')
 twilio_number = os.environ.get('TWILIO_NUMBER')
@@ -251,6 +253,8 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+##################### FIRE INCIDENTS MONITORING #####################
 
 # Global variables
 URL = "https://seshat.datasd.org/fire_ems_incidents/fd_incidents_2025_datasd.csv"
@@ -348,6 +352,30 @@ def refresh_data():
     threading.Thread(target=update_data).start()
     return jsonify({"status": "refresh started"})
 
+##################### HISTORICAL FIRE DATA #####################
+
+data_by_month = {}
+
+def preprocess_data(filepath):
+    df = pd.read_csv(filepath, parse_dates=['acq_date'])
+    df['year'] = df['acq_date'].dt.year
+    df['month'] = df['acq_date'].dt.month
+    
+    grouped = df.groupby(['year', 'month'])
+    for (year, month), group in grouped:
+        key = f"{year}-{month:02d}"
+        data_by_month[key] = group.to_dict(orient='records') 
+
+# sample request: http://127.0.0.1:8505/get-historical-data?year=2015&month=01
+
+@app.route("/get-historical-data", methods=["GET"])
+def get_historical_data():
+    year = request.args.get('year')
+    month = request.args.get('month')
+    key = f"{year}-{int(month):02d}"
+    return jsonify(data_by_month.get(key, []))
+
+
 # Create an AppGroup for custom commands
 custom_cli = AppGroup('custom', help='Custom commands')
 
@@ -430,4 +458,5 @@ app.cli.add_command(custom_cli)
 if __name__ == "__main__":
     monitor_thread = threading.Thread(target=fire_monitor_thread, daemon=True)
     monitor_thread.start()
+    preprocess_data("fire_archive.csv")
     app.run(debug=True, host="0.0.0.0", port="8505")
