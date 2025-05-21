@@ -5,88 +5,7 @@ from sklearn.ensemble import RandomForestRegressor
 from datetime import datetime
 from __init__ import app, db
 from sqlalchemy.exc import IntegrityError
-
-class Earthquake(db.Model):
-    """Earthquake database model"""
-    __tablename__ = 'earthquakes'
-
-    # Primary key
-    id = db.Column(db.Integer, primary_key=True)
-    
-    # Core earthquake data
-    latitude = db.Column(db.Float, nullable=False)
-    longitude = db.Column(db.Float, nullable=False)
-    depth = db.Column(db.Float, nullable=False)
-    time_of_day = db.Column(db.String(50), nullable=False)
-    previous_magnitude = db.Column(db.Float, nullable=False)
-    distance_to_fault = db.Column(db.Float, nullable=False)
-    plate_boundary_type = db.Column(db.String(50), nullable=False)
-    soil_type = db.Column(db.String(50), nullable=False)
-    magnitude = db.Column(db.Float, nullable=False)
-    
-    # Metadata
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.String(255))
-    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
-
-    def __init__(self, latitude, longitude, depth, time_of_day, previous_magnitude,
-                 distance_to_fault, plate_boundary_type, soil_type, magnitude):
-        self.latitude = latitude
-        self.longitude = longitude
-        self.depth = depth
-        self.time_of_day = time_of_day
-        self.previous_magnitude = previous_magnitude
-        self.distance_to_fault = distance_to_fault
-        self.plate_boundary_type = plate_boundary_type
-        self.soil_type = soil_type
-        self.magnitude = magnitude
-        self.created_by = "NathanTejidor"  # Current user's login
-
-    def create(self):
-        try:
-            db.session.add(self)
-            db.session.commit()
-            return self
-        except IntegrityError:
-            db.session.rollback()
-            raise Exception("Error occurred while creating earthquake record")
-
-    def read(self):
-        return {
-            "id": self.id,
-            "latitude": self.latitude,
-            "longitude": self.longitude,
-            "depth": self.depth,
-            "time_of_day": self.time_of_day,
-            "previous_magnitude": self.previous_magnitude,
-            "distance_to_fault": self.distance_to_fault,
-            "plate_boundary_type": self.plate_boundary_type,
-            "soil_type": self.soil_type,
-            "magnitude": self.magnitude,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "created_by": self.created_by,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None
-        }
-
-    def update(self, data):
-        try:
-            for key, value in data.items():
-                if hasattr(self, key):
-                    setattr(self, key, value)
-            db.session.commit()
-            return True
-        except Exception as e:
-            db.session.rollback()
-            raise Exception(f"Error occurred while updating earthquake record: {str(e)}")
-
-    def delete(self):
-        try:
-            db.session.delete(self)
-            db.session.commit()
-            return True
-        except Exception as e:
-            db.session.rollback()
-            raise Exception(f"Error occurred while deleting earthquake record: {str(e)}")
+from datetime import datetime
 
 class EarthquakeModel:
     """Singleton class for earthquake prediction model"""
@@ -103,7 +22,6 @@ class EarthquakeModel:
             raise Exception("This class is a singleton!")
         else:
             EarthquakeModel._instance = self
-            # Initialize the model and mappings
             self.model = self._load_model()
             self.time_map = {
                 'morning': 0,
@@ -127,6 +45,7 @@ class EarthquakeModel:
     def _load_model(self):
         """Load the pre-trained model from file"""
         try:
+            # Load the earthquake prediction model
             model = joblib.load('earthquake_model.pkl')
             print(f"Model loaded successfully at {datetime.utcnow().isoformat()}")
             return model
