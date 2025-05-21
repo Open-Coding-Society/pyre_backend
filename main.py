@@ -35,6 +35,7 @@ from api.titanic import titanic_api  # Import the titanic API
 from api.weather import weather_api
 from api.email import email_api
 from api.fire import forest_fire_api
+from api.stats import stats_api
 
 # database Initialization functions
 from model.user import User, initUsers
@@ -59,6 +60,7 @@ app.register_blueprint(titanic_api)
 app.register_blueprint(weather_api)
 app.register_blueprint(email_api)
 app.register_blueprint(forest_fire_api)
+app.register_blueprint(stats_api)
 
 load_dotenv()
 
