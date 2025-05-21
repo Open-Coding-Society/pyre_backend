@@ -1,4 +1,6 @@
 from __init__ import app, db
+import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
 
 class Earthquake(db.Model):
     """
@@ -59,3 +61,53 @@ class Earthquake(db.Model):
             'place': self.place,
             'type': self.type
         }
+
+
+class EarthquakeModel:
+    _instance = None
+
+    @staticmethod
+    def get_instance():
+        if EarthquakeModel._instance is None:
+            EarthquakeModel()
+        return EarthquakeModel._instance
+
+    def __init__(self):
+        if EarthquakeModel._instance is not None:
+            raise Exception("This class is a singleton!")
+        else:
+            EarthquakeModel._instance = self
+            self.model = self._load_model()
+
+    def _load_model(self):
+        """Load and train a RandomForest model on earthquake data"""
+        try:
+            # Load the local earthquake CSV file
+            file_path = "earthquakes.csv"  # Ensure this path exists in your project root
+            df = pd.read_csv(file_path)
+
+            # Filter out rows with missing target
+            df = df[df['mag'].notnull()]
+
+            # Convert categorical column
+            df['magType'] = df['magType'].astype('category').cat.codes
+
+            # Select features and target
+            features = [
+                'latitude', 'longitude', 'depth', 'magType', 'nst',
+                'gap', 'rms', 'horizontalError', 'depthError', 'magError', 'magNst'
+            ]
+            df = df[features + ['mag']].dropna()
+
+            X = df[features]
+            y = df['mag']
+
+            # Train model
+            model = RandomForestRegressor(n_estimators=100, random_state=42)
+            model.fit(X, y)
+
+            return model
+        except Exception as e:
+            print(f"Error loading earthquake model: {e}")
+            return None
+        
