@@ -37,6 +37,7 @@ from api.email import email_api
 from api.fire import forest_fire_api
 from api.stats import stats_api
 from api.historical_fire import historical_fire_api
+from api.help import help_api
 
 # database Initialization functions
 from model.user import User, initUsers
@@ -50,6 +51,7 @@ from model.titanic import Passenger, initPassengers
 from model.email import Email, initEmail
 from model.fire import ForestFireModel, ForestFire
 from model.historical_fire import FireDataAnalysisAdvancedRegressionModel
+from model.help import initHelpSystem
 # server only Views
 
 # register URIs for api endpoints
@@ -64,6 +66,7 @@ app.register_blueprint(email_api)
 app.register_blueprint(forest_fire_api)
 app.register_blueprint(stats_api)
 app.register_blueprint(historical_fire_api)
+app.register_blueprint(help_api)
 
 load_dotenv()
 
