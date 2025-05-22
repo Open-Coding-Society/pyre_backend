@@ -461,6 +461,92 @@ def get_historical_data():
     key = f"{year}-{int(month):02d}"
     return jsonify(data_by_month.get(key, []))
 
+##################### EARTHQUAKE HISTORICAL DATA #####################
+
+earthquake_data_by_month = {}
+
+def preprocess_earthquake_data(filepath):
+    """Preprocess earthquake data and group by year-month"""
+    try:
+        logger.info(f"Preprocessing earthquake data from {filepath}")
+        
+        # Read the CSV file
+        df = pd.read_csv(filepath)
+        
+        # The CSV columns based on your sample:
+        # time, latitude, longitude, depth, mag, magType, nst, gap, dmin, rms, net, id, updated, place, type, horizontalError, depthError, magError, magNst, status, locationSource, magSource
+        
+        # Parse the time column
+        df['time'] = pd.to_datetime(df['time'], errors='coerce')
+        
+        # Remove rows with invalid timestamps
+        df = df.dropna(subset=['time'])
+        
+        # Extract year and month
+        df['year'] = df['time'].dt.year
+        df['month'] = df['time'].dt.month
+        
+        # Clean and validate data
+        df = df.dropna(subset=['latitude', 'longitude'])  # Remove rows without coordinates
+        df['mag'] = pd.to_numeric(df['mag'], errors='coerce')  # Ensure magnitude is numeric
+        df['depth'] = pd.to_numeric(df['depth'], errors='coerce')  # Ensure depth is numeric
+        
+        # Group by year and month
+        grouped = df.groupby(['year', 'month'])
+        for (year, month), group in grouped:
+            key = f"{year}-{month:02d}"
+            earthquake_data_by_month[key] = group.to_dict(orient='records')
+        
+        logger.info(f"Earthquake data preprocessing complete. Found data for {len(earthquake_data_by_month)} month periods.")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error preprocessing earthquake data: {e}")
+        return False
+
+@app.route("/get-historical-earthquake-data", methods=["GET"])
+def get_historical_earthquake_data():
+    """Get historical earthquake data for a specific year and month"""
+    year = request.args.get('year')
+    month = request.args.get('month')
+    
+    if not year or not month:
+        return jsonify({"error": "Year and month parameters are required"}), 400
+    
+    try:
+        key = f"{year}-{int(month):02d}"
+        data = earthquake_data_by_month.get(key, [])
+        
+        logger.info(f"Returning {len(data)} earthquake records for {key}")
+        return jsonify(data)
+        
+    except Exception as e:
+        logger.error(f"Error getting earthquake data: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/earthquake-stats", methods=["GET"])
+def earthquake_stats():
+    """Get general statistics about available earthquake data"""
+    try:
+        total_months = len(earthquake_data_by_month)
+        total_earthquakes = sum(len(data) for data in earthquake_data_by_month.values())
+        
+        available_periods = list(earthquake_data_by_month.keys())
+        available_periods.sort()
+        
+        return jsonify({
+            "total_months": total_months,
+            "total_earthquakes": total_earthquakes,
+            "available_periods": available_periods,
+            "date_range": {
+                "start": available_periods[0] if available_periods else None,
+                "end": available_periods[-1] if available_periods else None
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting earthquake stats: {e}")
+        return jsonify({"error": str(e)}), 500
 
 # Create an AppGroup for custom commands
 custom_cli = AppGroup('custom', help='Custom commands')
@@ -620,12 +706,7 @@ def earthquake_data():
 
 # this runs the flask application on the development server
 if __name__ == "__main__":
-    # Start both monitoring threads
-    fire_monitor = threading.Thread(target=fire_monitor_thread, daemon=True)
-    earthquake_monitor = threading.Thread(target=earthquake_monitor_thread, daemon=True)
-    
-    fire_monitor.start()
-    earthquake_monitor.start()
+    monitor_thread = threading.Thread(target=fire_monitor_thread, daemon=True)
+    monitor_thread.start()
     preprocess_data("fire_archive.csv")
-    
     app.run(debug=True, host="0.0.0.0", port="8505")
