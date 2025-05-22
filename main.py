@@ -363,6 +363,8 @@ def refresh_data():
     threading.Thread(target=update_data).start()
     return jsonify({"status": "refresh started"})
 
+##################### EARTHQUAKE MONITORING #####################
+
 # Global variables for earthquake monitoring
 EARTHQUAKE_UPDATE_INTERVAL = 3600  # 1 hour in seconds
 last_earthquake_update = None
@@ -626,87 +628,25 @@ def restore_data_command():
     
 # Register the custom command group with the Flask application
 app.cli.add_command(custom_cli)
-        
-##################### EARTHQUAKE MONITORING #####################
-
-# Global variables for earthquake monitoring
-EARTHQUAKE_UPDATE_INTERVAL = 3600  # 1 hour in seconds
-last_earthquake_update = None
-earthquake_data_lock = threading.Lock()
-
-# Cached earthquake data
-cached_magnitude_counts = {}
-cached_region_counts = {}
-cached_recent_earthquakes = []
-
-def parse_earthquake_data():
-    global cached_magnitude_counts, cached_region_counts, cached_recent_earthquakes
-    
-    try:
-        logger.info("Parsing earthquake data from earthquakes.csv")
-        df = pd.read_csv('earthquakes.csv')
-        df['time'] = pd.to_datetime(df['time'])
-        
-        # Get earthquakes from the last 24 hours
-        now = pd.Timestamp.now()
-        recent_time = now - timedelta(days=1)
-        recent_quakes = df[df['time'] >= recent_time]
-        
-        with earthquake_data_lock:
-            # Count earthquakes by magnitude ranges
-            magnitude_ranges = pd.cut(recent_quakes['mag'], 
-                                    bins=[-float('inf'), 2, 3, 4, 5, float('inf')],
-                                    labels=['<2', '2-3', '3-4', '4-5', '>5'])
-            cached_magnitude_counts = magnitude_ranges.value_counts().to_dict()
-            
-            # Count earthquakes by region (using 'place' field)
-            cached_region_counts = recent_quakes['place'].value_counts().head(10).to_dict()
-            
-            # Store recent earthquakes
-            cached_recent_earthquakes = recent_quakes.sort_values('time', ascending=False).head(50).to_dict('records')
-        
-        logger.info(f"Parsed earthquake data successfully. Found {len(recent_quakes)} earthquakes in the last 24 hours.")
-        return True
-    except Exception as e:
-        logger.error(f"Error parsing earthquake data: {e}")
-        return False
-
-def update_earthquake_data():
-    global last_earthquake_update
-    parse_earthquake_data()
-    last_earthquake_update = datetime.now()
-
-def earthquake_monitor_thread():
-    logger.info("Starting earthquake monitoring thread")
-    
-    # Initial data parse
-    update_earthquake_data()
-    
-    while True:
-        try:
-            logger.info(f"Next earthquake data update in {EARTHQUAKE_UPDATE_INTERVAL/3600} hours")
-            time.sleep(EARTHQUAKE_UPDATE_INTERVAL)
-            logger.info("Checking for new earthquake data...")
-            update_earthquake_data()
-        except Exception as e:
-            logger.error(f"Error in earthquake monitoring thread: {e}")
-            time.sleep(60)  # Sleep briefly before trying again
-
-@app.route('/earthquake-data', methods=['GET'])
-def earthquake_data():
-    with earthquake_data_lock:
-        response_data = {
-            "magnitude_counts": cached_magnitude_counts,
-            "region_counts": cached_region_counts,
-            "recent_earthquakes": cached_recent_earthquakes,
-            "last_update": last_earthquake_update.isoformat() if last_earthquake_update else None
-        }
-    
-    return jsonify(response_data)
 
 # this runs the flask application on the development server
 if __name__ == "__main__":
     monitor_thread = threading.Thread(target=fire_monitor_thread, daemon=True)
+    earthquake_monitor = threading.Thread(target=earthquake_monitor_thread, daemon=True)
+    
     monitor_thread.start()
-    preprocess_data("fire_archive.csv")
+    earthquake_monitor.start()
+    
+    try:
+        preprocess_data("fire_archive.csv")
+    except FileNotFoundError:
+        logger.warning("fire_archive.csv not found. Historical fire data will not be available.")
+    except Exception as e:
+        logger.error(f"Error preprocessing fire data: {e}")
+    
+    try:
+        preprocess_earthquake_data("earthquakes.csv")
+    except Exception as e:
+        logger.error(f"Error preprocessing earthquake data: {e}")
+    
     app.run(debug=True, host="0.0.0.0", port="8505")
