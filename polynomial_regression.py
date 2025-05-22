@@ -17,18 +17,8 @@ df['year'] = df['acq_date'].dt.year
 df['month'] = df['acq_date'].dt.month
 df['year_month'] = df['acq_date'].dt.to_period('M')
 
-
 fires_per_month = df.groupby('year_month').size().reset_index(name='fire_count')
 fires_per_month['year_month'] = fires_per_month['year_month'].astype(str)
-
-
-plt.figure(figsize=(14, 5))
-sns.lineplot(data=fires_per_month, x='year_month', y='fire_count', marker="o")
-plt.xticks(rotation=45)
-plt.title("Monthly Fire Counts Over Time")
-plt.tight_layout()
-plt.show()
-
 
 fires_per_month['timestamp'] = pd.to_datetime(fires_per_month['year_month']).astype(int) / 10**9  # Unix time
 
