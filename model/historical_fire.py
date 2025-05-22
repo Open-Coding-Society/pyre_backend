@@ -14,6 +14,8 @@ from sklearn.pipeline import make_pipeline
 import io
 import base64
 import json
+from sklearn.manifold import TSNE
+import hdbscan
 from datetime import datetime, timedelta
 from __init__ import app, db
 
@@ -683,6 +685,377 @@ class FireDataPolynomialRegressionModel:
                 results["degree_comparison"] = comparison_result
             else:
                 results["degree_comparison"] = {"error": comparison_result.get("error")}
+            
+            return results
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def _fig_to_base64(self, fig):
+        """Convert matplotlib figure to base64 string"""
+        buffer = io.BytesIO()
+        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight', facecolor='white')
+        buffer.seek(0)
+        image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        buffer.close()
+        return f"data:image/png;base64,{image_base64}"
+
+class FireDataHDBSCANClusteringModel:
+    _instance = None
+
+    @staticmethod
+    def get_instance():
+        if FireDataHDBSCANClusteringModel._instance is None:
+            FireDataHDBSCANClusteringModel()
+        return FireDataHDBSCANClusteringModel._instance
+
+    def __init__(self):
+        if FireDataHDBSCANClusteringModel._instance is not None:
+            raise Exception("This class is a singleton!")
+        else:
+            FireDataHDBSCANClusteringModel._instance = self
+            self.data = None
+            self.clusterer = None
+            self.scaler = StandardScaler()
+            self.tsne_model = None
+            self.clustered_data = None
+            
+    def load_data(self, file_path="fire_archive.csv"):
+        """Load and preprocess the fire data"""
+        try:
+            self.data = pd.read_csv(file_path, parse_dates=['acq_date'])
+            
+            # Feature engineering
+            self.data['month'] = self.data['acq_date'].dt.month
+            self.data['hour'] = self.data['acq_date'].dt.hour if 'acq_time' not in self.data.columns else self.data['acq_time'] // 100
+            self.data['is_day'] = self.data['daynight'].map({'D': 1, 'N': 0}) if 'daynight' in self.data.columns else 1
+            
+            return {"status": "success", "message": "Data loaded successfully"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def prepare_clustering_data(self, sample_size=10000, random_state=42):
+        """Prepare and clean data for clustering"""
+        try:
+            if self.data is None:
+                return {"status": "error", "message": "Data not loaded"}
+            
+            # Feature selection
+            features = ['latitude', 'longitude', 'brightness', 'frp', 'month', 'hour', 'is_day']
+            
+            # Check if all required features exist
+            missing_features = [f for f in features if f not in self.data.columns]
+            if missing_features:
+                return {"status": "error", "message": f"Missing features: {missing_features}"}
+            
+            # Clean and sample data
+            df_clean = self.data[features].dropna()
+            
+            if len(df_clean) == 0:
+                return {"status": "error", "message": "No valid data after cleaning"}
+            
+            # Sample data if it's larger than sample_size
+            if len(df_clean) > sample_size:
+                df_clean = df_clean.sample(sample_size, random_state=random_state)
+            
+            self.clustered_data = df_clean.copy()
+            
+            return {
+                "status": "success", 
+                "message": "Data prepared successfully",
+                "sample_size": len(df_clean),
+                "features": features
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def perform_clustering(self, min_cluster_size=20, min_samples=None):
+        """Perform HDBSCAN clustering"""
+        try:
+            if self.clustered_data is None:
+                prep_result = self.prepare_clustering_data()
+                if prep_result["status"] == "error":
+                    return prep_result
+            
+            # Normalize features
+            features = ['latitude', 'longitude', 'brightness', 'frp', 'month', 'hour', 'is_day']
+            X_scaled = self.scaler.fit_transform(self.clustered_data[features])
+            
+            # Perform HDBSCAN clustering
+            self.clusterer = hdbscan.HDBSCAN(
+                min_cluster_size=min_cluster_size,
+                min_samples=min_samples
+            )
+            clusters = self.clusterer.fit_predict(X_scaled)
+            
+            # Add cluster labels to data
+            self.clustered_data['cluster'] = clusters
+            
+            # Calculate cluster statistics
+            unique_clusters = np.unique(clusters)
+            n_clusters = len(unique_clusters[unique_clusters != -1])  # Exclude noise (-1)
+            n_noise = np.sum(clusters == -1)
+            
+            return {
+                "status": "success",
+                "n_clusters": int(n_clusters),
+                "n_noise": int(n_noise),
+                "cluster_counts": self.clustered_data['cluster'].value_counts().to_dict(),
+                "total_points": len(clusters)
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def generate_tsne_projection(self, perplexity=50, random_state=42):
+        """Generate t-SNE projection of clustered data"""
+        try:
+            if self.clustered_data is None or 'cluster' not in self.clustered_data.columns:
+                return {"status": "error", "message": "Clustering must be performed first"}
+            
+            # Prepare scaled data for t-SNE
+            features = ['latitude', 'longitude', 'brightness', 'frp', 'month', 'hour', 'is_day']
+            X_scaled = self.scaler.transform(self.clustered_data[features])
+            
+            # Perform t-SNE
+            self.tsne_model = TSNE(n_components=2, random_state=random_state, perplexity=perplexity)
+            tsne_results = self.tsne_model.fit_transform(X_scaled)
+            
+            # Add t-SNE results to data
+            self.clustered_data['tsne-1'] = tsne_results[:, 0]
+            self.clustered_data['tsne-2'] = tsne_results[:, 1]
+            
+            return {"status": "success", "message": "t-SNE projection completed"}
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def generate_geographic_visualization(self):
+        """Generate geographic cluster visualization"""
+        try:
+            if self.clustered_data is None or 'cluster' not in self.clustered_data.columns:
+                return {"status": "error", "message": "Clustering must be performed first"}
+            
+            # Create geographic plot
+            fig, ax = plt.subplots(figsize=(12, 8))
+            
+            # Plot clusters
+            unique_clusters = sorted(self.clustered_data['cluster'].unique())
+            colors = plt.cm.tab10(np.linspace(0, 1, len(unique_clusters)))
+            
+            for i, cluster in enumerate(unique_clusters):
+                cluster_data = self.clustered_data[self.clustered_data['cluster'] == cluster]
+                label = f'Cluster {cluster}' if cluster != -1 else 'Noise'
+                color = 'gray' if cluster == -1 else colors[i]
+                alpha = 0.3 if cluster == -1 else 0.7
+                
+                ax.scatter(cluster_data['longitude'], cluster_data['latitude'], 
+                          c=[color], label=label, s=10, alpha=alpha)
+            
+            ax.set_title("Fire Clusters (HDBSCAN) - Geographic Distribution")
+            ax.set_xlabel("Longitude")
+            ax.set_ylabel("Latitude")
+            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            ax.grid(True, alpha=0.3)
+            
+            plot_data = self._fig_to_base64(fig)
+            plt.close(fig)
+            
+            return {"status": "success", "plot": plot_data}
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def generate_tsne_visualization(self):
+        """Generate t-SNE cluster visualization"""
+        try:
+            if self.clustered_data is None or 'tsne-1' not in self.clustered_data.columns:
+                tsne_result = self.generate_tsne_projection()
+                if tsne_result["status"] == "error":
+                    return tsne_result
+            
+            # Create t-SNE plot
+            fig, ax = plt.subplots(figsize=(10, 8))
+            
+            unique_clusters = sorted(self.clustered_data['cluster'].unique())
+            colors = plt.cm.tab10(np.linspace(0, 1, len(unique_clusters)))
+            
+            for i, cluster in enumerate(unique_clusters):
+                cluster_data = self.clustered_data[self.clustered_data['cluster'] == cluster]
+                label = f'Cluster {cluster}' if cluster != -1 else 'Noise'
+                color = 'gray' if cluster == -1 else colors[i]
+                alpha = 0.3 if cluster == -1 else 0.7
+                
+                ax.scatter(cluster_data['tsne-1'], cluster_data['tsne-2'], 
+                          c=[color], label=label, s=10, alpha=alpha)
+            
+            ax.set_title("t-SNE Projection of Fire Clusters")
+            ax.set_xlabel("t-SNE 1")
+            ax.set_ylabel("t-SNE 2")
+            ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+            ax.grid(True, alpha=0.3)
+            
+            plot_data = self._fig_to_base64(fig)
+            plt.close(fig)
+            
+            return {"status": "success", "plot": plot_data}
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def generate_cluster_analysis_plots(self):
+        """Generate cluster analysis and distribution plots"""
+        try:
+            if self.clustered_data is None or 'cluster' not in self.clustered_data.columns:
+                return {"status": "error", "message": "Clustering must be performed first"}
+            
+            plots = {}
+            
+            # Month distribution by cluster
+            fig1, ax1 = plt.subplots(figsize=(12, 6))
+            sns.boxplot(data=self.clustered_data, x='cluster', y='month', ax=ax1)
+            ax1.set_title("Distribution of Fire Months by Cluster")
+            ax1.set_xlabel("Cluster")
+            ax1.set_ylabel("Month")
+            ax1.grid(True, alpha=0.3)
+            plots['month_distribution'] = self._fig_to_base64(fig1)
+            plt.close(fig1)
+            
+            # Brightness distribution by cluster
+            fig2, ax2 = plt.subplots(figsize=(12, 6))
+            sns.boxplot(data=self.clustered_data, x='cluster', y='brightness', ax=ax2)
+            ax2.set_title("Brightness Distribution by Cluster")
+            ax2.set_xlabel("Cluster")
+            ax2.set_ylabel("Brightness")
+            ax2.grid(True, alpha=0.3)
+            plots['brightness_distribution'] = self._fig_to_base64(fig2)
+            plt.close(fig2)
+            
+            # FRP distribution by cluster
+            fig3, ax3 = plt.subplots(figsize=(12, 6))
+            sns.boxplot(data=self.clustered_data, x='cluster', y='frp', ax=ax3)
+            ax3.set_title("Fire Radiative Power (FRP) Distribution by Cluster")
+            ax3.set_xlabel("Cluster")
+            ax3.set_ylabel("FRP")
+            ax3.grid(True, alpha=0.3)
+            plots['frp_distribution'] = self._fig_to_base64(fig3)
+            plt.close(fig3)
+            
+            # Hour distribution by cluster
+            fig4, ax4 = plt.subplots(figsize=(12, 6))
+            sns.boxplot(data=self.clustered_data, x='cluster', y='hour', ax=ax4)
+            ax4.set_title("Hour Distribution by Cluster")
+            ax4.set_xlabel("Cluster")
+            ax4.set_ylabel("Hour")
+            ax4.grid(True, alpha=0.3)
+            plots['hour_distribution'] = self._fig_to_base64(fig4)
+            plt.close(fig4)
+            
+            return {"status": "success", "plots": plots}
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def get_cluster_statistics(self):
+        """Get detailed cluster statistics"""
+        try:
+            if self.clustered_data is None or 'cluster' not in self.clustered_data.columns:
+                return {"status": "error", "message": "Clustering must be performed first"}
+            
+            # Cluster counts
+            cluster_counts = self.clustered_data['cluster'].value_counts().to_dict()
+            
+            # Cluster means for numerical features
+            numerical_features = ['brightness', 'frp', 'month', 'hour', 'is_day', 'latitude', 'longitude']
+            cluster_means = self.clustered_data.groupby('cluster')[numerical_features].mean().to_dict('index')
+            
+            # Cluster medians
+            cluster_medians = self.clustered_data.groupby('cluster')[numerical_features].median().to_dict('index')
+            
+            # Cluster standard deviations
+            cluster_stds = self.clustered_data.groupby('cluster')[numerical_features].std().to_dict('index')
+            
+            return {
+                "status": "success",
+                "cluster_counts": cluster_counts,
+                "cluster_means": cluster_means,
+                "cluster_medians": cluster_medians,
+                "cluster_stds": cluster_stds,
+                "total_clusters": len([c for c in cluster_counts.keys() if c != -1]),
+                "noise_points": cluster_counts.get(-1, 0)
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def export_clustered_data(self):
+        """Export clustered data as CSV format (JSON response)"""
+        try:
+            if self.clustered_data is None:
+                return {"status": "error", "message": "No clustered data available"}
+            
+            # Convert to CSV format (as JSON for API response)
+            csv_data = self.clustered_data.to_dict('records')
+            
+            return {
+                "status": "success",
+                "data": csv_data,
+                "record_count": len(csv_data),
+                "columns": list(self.clustered_data.columns)
+            }
+            
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def run_comprehensive_clustering_analysis(self, min_cluster_size=20, sample_size=10000):
+        """Run complete clustering analysis pipeline"""
+        try:
+            # Load and prepare data
+            if self.data is None:
+                load_result = self.load_data()
+                if load_result["status"] == "error":
+                    return load_result
+            
+            # Prepare clustering data
+            prep_result = self.prepare_clustering_data(sample_size=sample_size)
+            if prep_result["status"] == "error":
+                return prep_result
+            
+            # Perform clustering
+            cluster_result = self.perform_clustering(min_cluster_size=min_cluster_size)
+            if cluster_result["status"] == "error":
+                return cluster_result
+            
+            # Generate t-SNE projection
+            tsne_result = self.generate_tsne_projection()
+            if tsne_result["status"] == "error":
+                return tsne_result
+            
+            # Generate all visualizations
+            geo_viz = self.generate_geographic_visualization()
+            tsne_viz = self.generate_tsne_visualization()
+            analysis_plots = self.generate_cluster_analysis_plots()
+            
+            # Get statistics
+            stats = self.get_cluster_statistics()
+            
+            # Compile comprehensive results
+            results = {
+                "status": "success",
+                "timestamp": datetime.now().isoformat(),
+                "clustering_info": cluster_result,
+                "statistics": stats.get("status") == "success" and stats or {"error": stats.get("message")},
+                "visualizations": {
+                    "geographic": geo_viz.get("status") == "success" and {"plot": geo_viz["plot"]} or {"error": geo_viz.get("message")},
+                    "tsne": tsne_viz.get("status") == "success" and {"plot": tsne_viz["plot"]} or {"error": tsne_viz.get("message")},
+                    "analysis_plots": analysis_plots.get("status") == "success" and analysis_plots["plots"] or {"error": analysis_plots.get("message")}
+                },
+                "data_info": {
+                    "sample_size": len(self.clustered_data),
+                    "features_used": ['latitude', 'longitude', 'brightness', 'frp', 'month', 'hour', 'is_day']
+                }
+            }
             
             return results
             
