@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_restful import Api, Resource # used for REST API building
 import numpy as np
 import pandas as pd
-from model.historical_fire import FireDataAnalysisAdvancedRegressionModel, FireDataPolynomialRegressionModel
+from model.historical_fire import FireDataAnalysisAdvancedRegressionModel, FireDataPolynomialRegressionModel, FireDataHDBSCANClusteringModel
 from __init__ import app, db
 
 historical_fire_api = Blueprint('historical_fire_api', __name__,
@@ -516,3 +516,211 @@ class FireDataPolynomialRegressionAPI:
     api.add_resource(_PredictFuture, '/polynomial/predict')
     api.add_resource(_ModelMetrics, '/polynomial/metrics')
 
+class FireDataHDBSCANClusteringAPI:
+    class _PerformClustering(Resource):
+        def post(self):
+            """
+            POST request to perform HDBSCAN clustering on fire data
+            
+            Expected JSON payload:
+            {
+                "min_cluster_size": 20,      # Minimum cluster size for HDBSCAN
+                "sample_size": 10000,       # Sample size for clustering
+                "analysis_type": "comprehensive"  # Options: "comprehensive", "clustering_only", "visualization_only"
+            }
+            
+            Returns comprehensive clustering analysis including:
+            - HDBSCAN clustering results
+            - t-SNE visualization
+            - Geographic cluster distribution
+            - Statistical analysis of clusters
+            - Cluster feature distributions
+            """
+            try:
+                # Get clustering parameters
+                clustering_data = request.get_json()
+                
+                # Set default parameters
+                min_cluster_size = clustering_data.get('min_cluster_size', 20) if clustering_data else 20
+                sample_size = clustering_data.get('sample_size', 10000) if clustering_data else 10000
+                analysis_type = clustering_data.get('analysis_type', 'comprehensive') if clustering_data else 'comprehensive'
+                
+                # Validate parameters
+                if min_cluster_size < 2:
+                    return {"error": "min_cluster_size must be at least 2"}, 400
+                
+                if sample_size < 100 or sample_size > 50000:
+                    return {"error": "sample_size must be between 100 and 50000"}, 400
+                
+                # Get singleton instance
+                clustering_model = FireDataHDBSCANClusteringModel.get_instance()
+                
+                # Run analysis based on type
+                if analysis_type == "comprehensive":
+                    response = clustering_model.run_comprehensive_clustering_analysis(
+                        min_cluster_size=min_cluster_size, 
+                        sample_size=sample_size
+                    )
+                elif analysis_type == "clustering_only":
+                    # Prepare and perform clustering only
+                    if clustering_model.data is None:
+                        load_result = clustering_model.load_data()
+                        if load_result["status"] == "error":
+                            return {"error": f"Failed to load data: {load_result['message']}"}, 500
+                    
+                    prep_result = clustering_model.prepare_clustering_data(sample_size=sample_size)
+                    if prep_result["status"] == "error":
+                        return {"error": prep_result["message"]}, 500
+                    
+                    response = clustering_model.perform_clustering(min_cluster_size=min_cluster_size)
+                    
+                elif analysis_type == "visualization_only":
+                    # Generate visualizations only (requires existing clustering)
+                    geo_viz = clustering_model.generate_geographic_visualization()
+                    tsne_viz = clustering_model.generate_tsne_visualization()
+                    analysis_plots = clustering_model.generate_cluster_analysis_plots()
+                    
+                    response = {
+                        "status": "success",
+                        "visualizations": {
+                            "geographic": geo_viz,
+                            "tsne": tsne_viz,
+                            "analysis_plots": analysis_plots
+                        }
+                    }
+                else:
+                    return {"error": "Invalid analysis_type. Choose from: comprehensive, clustering_only, visualization_only"}, 400
+                
+                # Return response
+                if response.get("status") == "success":
+                    return jsonify(response)
+                else:
+                    return {"error": response.get("message", "Clustering analysis failed")}, 500
+                    
+            except Exception as e:
+                return {"error": f"Internal server error: {str(e)}"}, 500
+
+    class _ClusterStatistics(Resource):
+        def get(self):
+            """
+            GET request to retrieve cluster statistics
+            
+            Returns detailed statistics about existing clusters
+            """
+            try:
+                clustering_model = FireDataHDBSCANClusteringModel.get_instance()
+                
+                response = clustering_model.get_cluster_statistics()
+                
+                if response.get("status") == "success":
+                    return jsonify(response)
+                else:
+                    return {"error": response.get("message", "Failed to get cluster statistics")}, 500
+                    
+            except Exception as e:
+                return {"error": f"Internal server error: {str(e)}"}, 500
+
+    class _ExportClusters(Resource):
+        def get(self):
+            """
+            GET request to export clustered data
+            
+            Returns clustered data in CSV format (as JSON)
+            """
+            try:
+                clustering_model = FireDataHDBSCANClusteringModel.get_instance()
+                
+                response = clustering_model.export_clustered_data()
+                
+                if response.get("status") == "success":
+                    return jsonify(response)
+                else:
+                    return {"error": response.get("message", "Failed to export clustered data")}, 404
+                    
+            except Exception as e:
+                return {"error": f"Internal server error: {str(e)}"}, 500
+
+    class _ClusterVisualization(Resource):
+        def post(self):
+            """
+            POST request to generate specific cluster visualizations
+            
+            Expected JSON payload:
+            {
+                "visualization_type": "geographic"  # Options: "geographic", "tsne", "analysis_plots", "all"
+            }
+            """
+            try:
+                viz_data = request.get_json()
+                viz_type = viz_data.get('visualization_type', 'all') if viz_data else 'all'
+                
+                clustering_model = FireDataHDBSCANClusteringModel.get_instance()
+                
+                if viz_type == "geographic":
+                    response = clustering_model.generate_geographic_visualization()
+                elif viz_type == "tsne":
+                    response = clustering_model.generate_tsne_visualization()
+                elif viz_type == "analysis_plots":
+                    response = clustering_model.generate_cluster_analysis_plots()
+                elif viz_type == "all":
+                    geo_viz = clustering_model.generate_geographic_visualization()
+                    tsne_viz = clustering_model.generate_tsne_visualization()
+                    analysis_plots = clustering_model.generate_cluster_analysis_plots()
+                    
+                    response = {
+                        "status": "success",
+                        "visualizations": {
+                            "geographic": geo_viz,
+                            "tsne": tsne_viz,
+                            "analysis_plots": analysis_plots
+                        }
+                    }
+                else:
+                    return {"error": "Invalid visualization_type. Choose from: geographic, tsne, analysis_plots, all"}, 400
+                
+                if response.get("status") == "success":
+                    return jsonify(response)
+                else:
+                    return {"error": response.get("message", "Visualization generation failed")}, 500
+                    
+            except Exception as e:
+                return {"error": f"Internal server error: {str(e)}"}, 500
+
+    class _ClusteringStatus(Resource):
+        def get(self):
+            """
+            GET request to check clustering model status
+            """
+            try:
+                clustering_model = FireDataHDBSCANClusteringModel.get_instance()
+                
+                status = {
+                    "status": "healthy",
+                    "model_loaded": clustering_model is not None,
+                    "data_loaded": clustering_model.data is not None,
+                    "clustering_performed": clustering_model.clustered_data is not None and 'cluster' in clustering_model.clustered_data.columns,
+                    "tsne_available": clustering_model.clustered_data is not None and 'tsne-1' in clustering_model.clustered_data.columns,
+                    "scaler_fitted": clustering_model.scaler is not None
+                }
+                
+                if clustering_model.clustered_data is not None:
+                    status["clustering_info"] = {
+                        "sample_size": len(clustering_model.clustered_data),
+                        "features_available": list(clustering_model.clustered_data.columns)
+                    }
+                    
+                    if 'cluster' in clustering_model.clustered_data.columns:
+                        cluster_counts = clustering_model.clustered_data['cluster'].value_counts()
+                        status["clustering_info"]["n_clusters"] = len([c for c in cluster_counts.index if c != -1])
+                        status["clustering_info"]["n_noise"] = cluster_counts.get(-1, 0)
+                
+                return jsonify(status)
+                
+            except Exception as e:
+                return {"error": f"Status check failed: {str(e)}"}, 500
+
+    api.add_resource(_PerformClustering, '/clustering/analyze')
+    api.add_resource(_ClusterStatistics, '/clustering/statistics')
+    api.add_resource(_ExportClusters, '/clustering/export')
+    api.add_resource(_ClusterVisualization, '/clustering/visualize')
+    api.add_resource(_ClusteringStatus, '/clustering/status')
