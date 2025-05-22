@@ -36,6 +36,7 @@ from api.weather import weather_api
 from api.email import email_api
 from api.fire import forest_fire_api
 from api.stats import stats_api
+from api.historical_fire import historical_fire_api
 
 # database Initialization functions
 from model.user import User, initUsers
@@ -48,6 +49,7 @@ from model.titanic import TitanicModel  # Import the TitanicModel class
 from model.titanic import Passenger, initPassengers
 from model.email import Email, initEmail
 from model.fire import ForestFireModel, ForestFire
+from model.historical_fire import FireDataAnalysisAdvancedRegressionModel
 # server only Views
 
 # register URIs for api endpoints
@@ -61,6 +63,7 @@ app.register_blueprint(weather_api)
 app.register_blueprint(email_api)
 app.register_blueprint(forest_fire_api)
 app.register_blueprint(stats_api)
+app.register_blueprint(historical_fire_api)
 
 load_dotenv()
 
