@@ -123,10 +123,15 @@ class EarthquakeAPI:
                         'latitude': float(record['latitude']),
                         'longitude': float(record['longitude']),
                         'depth': float(record['depth']),
-                        'mag': float(record['mag']),
+                        'magnitude': float(record['mag']),
                         'magType': record.get('magType', None),
                         'place': record.get('place', None),
-                        'type': record.get('type', 'earthquake')
+                        'type': record.get('type', 'earthquake'),
+                        'time_of_day': record['time'].hour,
+                        'soil_type': 'Unknown',
+                        'plate_boundary_type': 'Transform',
+                        'previous_magnitude': 0.0,
+                        'distance_to_fault': 0.0
                     }
 
                 # Otherwise return all earthquake records
@@ -138,10 +143,15 @@ class EarthquakeAPI:
                         'latitude': float(row['latitude']),
                         'longitude': float(row['longitude']),
                         'depth': float(row['depth']),
-                        'mag': float(row['mag']),
+                        'magnitude': float(row['mag']),
                         'magType': row.get('magType', None),
                         'place': row.get('place', None),
-                        'type': row.get('type', 'earthquake')
+                        'type': row.get('type', 'earthquake'),
+                        'time_of_day': row['time'].hour,
+                        'soil_type': 'Unknown',
+                        'plate_boundary_type': 'Transform',
+                        'previous_magnitude': 0.0,
+                        'distance_to_fault': 0.0
                     })
                 return jsonify(records)
             except Exception as e:

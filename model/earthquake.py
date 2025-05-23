@@ -109,6 +109,10 @@ class Earthquake(db.Model):
         magType (db.Column): Type of magnitude measurement
         place (db.Column): Description of the location
         type (db.Column): Type of seismic event
+        soil_type (db.Column): Type of soil at the location
+        plate_boundary_type (db.Column): Type of plate boundary
+        previous_magnitude (db.Column): Previous magnitude in the area
+        distance_to_fault (db.Column): Distance to nearest fault line
     """
     __tablename__ = 'earthquakes'
 
@@ -121,8 +125,13 @@ class Earthquake(db.Model):
     magType = db.Column(db.String(10))
     place = db.Column(db.String(200))
     type = db.Column(db.String(50))
+    soil_type = db.Column(db.String(50), default='Unknown')
+    plate_boundary_type = db.Column(db.String(50), default='Transform')
+    previous_magnitude = db.Column(db.Float, default=0.0)
+    distance_to_fault = db.Column(db.Float, default=0.0)
 
-    def __init__(self, time, latitude, longitude, depth, mag, magType=None, place=None, type="earthquake"):
+    def __init__(self, time, latitude, longitude, depth, mag, magType=None, place=None, type="earthquake",
+                 soil_type="Unknown", plate_boundary_type="Transform", previous_magnitude=0.0, distance_to_fault=0.0):
         """
         Constructor for Earthquake
 
@@ -135,6 +144,10 @@ class Earthquake(db.Model):
             magType (str, optional): Type of magnitude measurement
             place (str, optional): Description of the location
             type (str, optional): Type of seismic event, defaults to "earthquake"
+            soil_type (str, optional): Type of soil at the location
+            plate_boundary_type (str, optional): Type of plate boundary
+            previous_magnitude (float, optional): Previous magnitude in the area
+            distance_to_fault (float, optional): Distance to nearest fault line
         """
         self.time = time
         self.latitude = latitude
@@ -144,6 +157,10 @@ class Earthquake(db.Model):
         self.magType = magType
         self.place = place
         self.type = type
+        self.soil_type = soil_type
+        self.plate_boundary_type = plate_boundary_type
+        self.previous_magnitude = previous_magnitude
+        self.distance_to_fault = distance_to_fault
 
     def __repr__(self):
         """String representation of the Earthquake object"""
@@ -175,10 +192,15 @@ class Earthquake(db.Model):
             'latitude': self.latitude,
             'longitude': self.longitude,
             'depth': self.depth,
-            'mag': self.mag,
+            'magnitude': self.mag,  # Changed from mag to magnitude
             'magType': self.magType,
             'place': self.place,
-            'type': self.type
+            'type': self.type,
+            'time_of_day': self.time.hour if self.time else 0,
+            'soil_type': self.soil_type,
+            'plate_boundary_type': self.plate_boundary_type,
+            'previous_magnitude': self.previous_magnitude,
+            'distance_to_fault': self.distance_to_fault
         }
 
 def initEarthquakes():
@@ -204,7 +226,11 @@ def initEarthquakes():
                 mag=row['mag'],
                 magType=row.get('magType', None),
                 place=row.get('place', None),
-                type=row.get('type', 'earthquake')
+                type=row.get('type', 'earthquake'),
+                soil_type=row.get('soil_type', 'Unknown'),
+                plate_boundary_type=row.get('plate_boundary_type', 'Transform'),
+                previous_magnitude=row.get('previous_magnitude', 0.0),
+                distance_to_fault=row.get('distance_to_fault', 0.0)
             )
             db.session.add(earthquake)
         
