@@ -645,7 +645,7 @@ if __name__ == "__main__":
         logger.error(f"Error preprocessing fire data: {e}")
     
     try:
-        preprocess_earthquake_data("earthquakes.csv")
+        preprocess_earthquake_data("past_earthquakes.csv")
     except Exception as e:
         logger.error(f"Error preprocessing earthquake data: {e}")
     
