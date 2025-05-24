@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from flask_restful import Api, Resource
+from flask_restful import Api
+from flask_restful import Resource
 from __init__ import db
 from model.usettings import Settings
 from api.jwt_authorize import token_required
@@ -13,7 +14,7 @@ current_api = Blueprint('current_api', __name__, url_prefix='/api')
 api = Api(current_api)
 api_key = "51b8d0134b8e3ec9bcba5856741b34a1"
 
-class CurrentApi:
+class CurrentApi(Resource):
     def get(self):
         city = request.args.get('City')
 
@@ -24,8 +25,8 @@ class CurrentApi:
         try:
             weather_url = "https://api.openweathermap.org/data/2.5/weather"
             params = {
-                'city name': city,
-                'API key': api_key,
+                'q': city,
+                'appid': api_key,
             }
 
             response = requests.get(weather_url, params=params)
@@ -42,11 +43,8 @@ class CurrentApi:
                         "temperature": weather_data['main']['temp'],
                         "humidity": weather_data['main']['humidity'],
                         "wind_speed": weather_data['wind']['speed'],
-                        "precipitation": weather_data.get('rain', {}).get('1h', 0),
-                        "conditions": weather_data['weather'][0]['main'],
-                        "description": weather_data['weather'][0]['description']
-                    },
-                    "timestamp": weather_data['dt']
+                        "description": weather_data['weather']['description']
+                    }
                 }
 
                 return fire_relevant_data
@@ -57,4 +55,4 @@ class CurrentApi:
         except Exception as e:
             return {"error": "Server error", "message": str(e)}, 500
 
-api.add_resource(CurrentApi, '/current')
+api.add_resource(CurrentApi, '/current_api')
