@@ -38,6 +38,7 @@ from api.fire import forest_fire_api
 from api.stats import stats_api
 from api.historical_fire import historical_fire_api
 from api.help import help_api
+from api.current import current_api
 
 # database Initialization functions
 from model.user import User, initUsers
@@ -67,6 +68,7 @@ app.register_blueprint(forest_fire_api)
 app.register_blueprint(stats_api)
 app.register_blueprint(historical_fire_api)
 app.register_blueprint(help_api)
+app.register_blueprint(current_api)
 
 load_dotenv()
 
