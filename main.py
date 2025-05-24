@@ -20,7 +20,7 @@ import threading
 import requests
 import pandas as pd
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # import "objects" from "this" project
 from __init__ import app, db, login_manager  # Key Flask objects 
@@ -39,6 +39,7 @@ from api.stats import stats_api
 from api.historical_fire import historical_fire_api
 from api.help import help_api
 from api.current import current_api
+from api.earthquake import earthquake_api  # Import the earthquake API
 
 # database Initialization functions
 from model.user import User, initUsers
@@ -51,6 +52,7 @@ from model.titanic import TitanicModel  # Import the TitanicModel class
 from model.titanic import Passenger, initPassengers
 from model.email import Email, initEmail
 from model.fire import ForestFireModel, ForestFire
+from model.earthquake import Earthquake, initEarthquakes  # Add this import
 from model.historical_fire import FireDataAnalysisAdvancedRegressionModel
 from model.help import initHelpSystem
 # server only Views
@@ -66,6 +68,7 @@ app.register_blueprint(weather_api)
 app.register_blueprint(email_api)
 app.register_blueprint(forest_fire_api)
 app.register_blueprint(stats_api)
+app.register_blueprint(earthquake_api)  # Register the earthquake API
 app.register_blueprint(historical_fire_api)
 app.register_blueprint(help_api)
 app.register_blueprint(current_api)
@@ -362,6 +365,83 @@ def refresh_data():
     threading.Thread(target=update_data).start()
     return jsonify({"status": "refresh started"})
 
+##################### EARTHQUAKE MONITORING #####################
+
+# Global variables for earthquake monitoring
+EARTHQUAKE_UPDATE_INTERVAL = 3600  # 1 hour in seconds
+last_earthquake_update = None
+earthquake_data_lock = threading.Lock()
+
+# Cached earthquake data
+cached_magnitude_counts = {}
+cached_region_counts = {}
+cached_recent_earthquakes = []
+
+def parse_earthquake_data():
+    global cached_magnitude_counts, cached_region_counts, cached_recent_earthquakes
+    
+    try:
+        logger.info("Parsing earthquake data from earthquakes.csv")
+        df = pd.read_csv('earthquakes.csv')
+        df['time'] = pd.to_datetime(df['time'])
+        
+        # Get earthquakes from the last 24 hours
+        now = pd.Timestamp.now()
+        recent_time = now - timedelta(days=1)
+        recent_quakes = df[df['time'] >= recent_time]
+        
+        with earthquake_data_lock:
+            # Count earthquakes by magnitude ranges
+            magnitude_ranges = pd.cut(recent_quakes['mag'], 
+                                    bins=[-float('inf'), 2, 3, 4, 5, float('inf')],
+                                    labels=['<2', '2-3', '3-4', '4-5', '>5'])
+            cached_magnitude_counts = magnitude_ranges.value_counts().to_dict()
+            
+            # Count earthquakes by region (using 'place' field)
+            cached_region_counts = recent_quakes['place'].value_counts().head(10).to_dict()
+            
+            # Store recent earthquakes
+            cached_recent_earthquakes = recent_quakes.sort_values('time', ascending=False).head(50).to_dict('records')
+        
+        logger.info(f"Parsed earthquake data successfully. Found {len(recent_quakes)} earthquakes in the last 24 hours.")
+        return True
+    except Exception as e:
+        logger.error(f"Error parsing earthquake data: {e}")
+        return False
+
+def update_earthquake_data():
+    global last_earthquake_update
+    parse_earthquake_data()
+    last_earthquake_update = datetime.now()
+
+def earthquake_monitor_thread():
+    logger.info("Starting earthquake monitoring thread")
+    
+    # Initial data parse
+    update_earthquake_data()
+    
+    while True:
+        try:
+            logger.info(f"Next earthquake data update in {EARTHQUAKE_UPDATE_INTERVAL/3600} hours")
+            time.sleep(EARTHQUAKE_UPDATE_INTERVAL)
+            logger.info("Checking for new earthquake data...")
+            update_earthquake_data()
+        except Exception as e:
+            logger.error(f"Error in earthquake monitoring thread: {e}")
+            time.sleep(60)  # Sleep briefly before trying again
+
+@app.route('/earthquake-data', methods=['GET'])
+def earthquake_data():
+    with earthquake_data_lock:
+        response_data = {
+            "magnitude_counts": cached_magnitude_counts,
+            "region_counts": cached_region_counts,
+            "recent_earthquakes": cached_recent_earthquakes,
+            "last_update": last_earthquake_update.isoformat() if last_earthquake_update else None
+        }
+    
+    return jsonify(response_data)
+
 ##################### HISTORICAL FIRE DATA #####################
 
 data_by_month = {}
@@ -385,6 +465,92 @@ def get_historical_data():
     key = f"{year}-{int(month):02d}"
     return jsonify(data_by_month.get(key, []))
 
+##################### EARTHQUAKE HISTORICAL DATA #####################
+
+earthquake_data_by_month = {}
+
+def preprocess_earthquake_data(filepath):
+    """Preprocess earthquake data and group by year-month"""
+    try:
+        logger.info(f"Preprocessing earthquake data from {filepath}")
+        
+        # Read the CSV file
+        df = pd.read_csv(filepath)
+        
+        # The CSV columns based on your sample:
+        # time, latitude, longitude, depth, mag, magType, nst, gap, dmin, rms, net, id, updated, place, type, horizontalError, depthError, magError, magNst, status, locationSource, magSource
+        
+        # Parse the time column
+        df['time'] = pd.to_datetime(df['time'], errors='coerce')
+        
+        # Remove rows with invalid timestamps
+        df = df.dropna(subset=['time'])
+        
+        # Extract year and month
+        df['year'] = df['time'].dt.year
+        df['month'] = df['time'].dt.month
+        
+        # Clean and validate data
+        df = df.dropna(subset=['latitude', 'longitude'])  # Remove rows without coordinates
+        df['mag'] = pd.to_numeric(df['mag'], errors='coerce')  # Ensure magnitude is numeric
+        df['depth'] = pd.to_numeric(df['depth'], errors='coerce')  # Ensure depth is numeric
+        
+        # Group by year and month
+        grouped = df.groupby(['year', 'month'])
+        for (year, month), group in grouped:
+            key = f"{year}-{month:02d}"
+            earthquake_data_by_month[key] = group.to_dict(orient='records')
+        
+        logger.info(f"Earthquake data preprocessing complete. Found data for {len(earthquake_data_by_month)} month periods.")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error preprocessing earthquake data: {e}")
+        return False
+
+@app.route("/get-historical-earthquake-data", methods=["GET"])
+def get_historical_earthquake_data():
+    """Get historical earthquake data for a specific year and month"""
+    year = request.args.get('year')
+    month = request.args.get('month')
+    
+    if not year or not month:
+        return jsonify({"error": "Year and month parameters are required"}), 400
+    
+    try:
+        key = f"{year}-{int(month):02d}"
+        data = earthquake_data_by_month.get(key, [])
+        
+        logger.info(f"Returning {len(data)} earthquake records for {key}")
+        return jsonify(data)
+        
+    except Exception as e:
+        logger.error(f"Error getting earthquake data: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/earthquake-stats", methods=["GET"])
+def earthquake_stats():
+    """Get general statistics about available earthquake data"""
+    try:
+        total_months = len(earthquake_data_by_month)
+        total_earthquakes = sum(len(data) for data in earthquake_data_by_month.values())
+        
+        available_periods = list(earthquake_data_by_month.keys())
+        available_periods.sort()
+        
+        return jsonify({
+            "total_months": total_months,
+            "total_earthquakes": total_earthquakes,
+            "available_periods": available_periods,
+            "date_range": {
+                "start": available_periods[0] if available_periods else None,
+                "end": available_periods[-1] if available_periods else None
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting earthquake stats: {e}")
+        return jsonify({"error": str(e)}), 500
 
 # Create an AppGroup for custom commands
 custom_cli = AppGroup('custom', help='Custom commands')
@@ -398,6 +564,7 @@ def generate_data():
     initTeamMembers()
     initPassengers()
     initEmail()
+    initEarthquakes()  # Add this line
     
 # Backup the old database
 def backup_database(db_uri, backup_uri):
@@ -463,10 +630,25 @@ def restore_data_command():
     
 # Register the custom command group with the Flask application
 app.cli.add_command(custom_cli)
-        
+
 # this runs the flask application on the development server
 if __name__ == "__main__":
     monitor_thread = threading.Thread(target=fire_monitor_thread, daemon=True)
+    earthquake_monitor = threading.Thread(target=earthquake_monitor_thread, daemon=True)
+    
     monitor_thread.start()
-    preprocess_data("fire_archive.csv")
+    earthquake_monitor.start()
+    
+    try:
+        preprocess_data("fire_archive.csv")
+    except FileNotFoundError:
+        logger.warning("fire_archive.csv not found. Historical fire data will not be available.")
+    except Exception as e:
+        logger.error(f"Error preprocessing fire data: {e}")
+    
+    try:
+        preprocess_earthquake_data("past_earthquakes.csv")
+    except Exception as e:
+        logger.error(f"Error preprocessing earthquake data: {e}")
+    
     app.run(debug=True, host="0.0.0.0", port="8505")
