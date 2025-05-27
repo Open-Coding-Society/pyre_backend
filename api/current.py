@@ -13,19 +13,21 @@ load_dotenv()
 current_api = Blueprint('current_api', __name__, url_prefix='/api')
 api = Api(current_api)
 api_key = "51b8d0134b8e3ec9bcba5856741b34a1"
+q = "San Diego"
 
 class CurrentApi(Resource):
     def get(self):
-        city = request.args.get('City')
+        # q = request.args.get('q')
+        # print("Received q:", q)
 
-        if not city:
-            return {"error": "Missing required parameters",
-                    "message": "Please provide city name"}, 400
+        # if not q:
+        #     return {"error": "Missing required parameters",
+        #             "message": "Please provide city name"}, 400
 
         try:
             weather_url = "https://api.openweathermap.org/data/2.5/weather"
             params = {
-                'q': city,
+                'q': q,
                 'appid': api_key,
             }
 
@@ -43,7 +45,7 @@ class CurrentApi(Resource):
                         "temperature": weather_data['main']['temp'],
                         "humidity": weather_data['main']['humidity'],
                         "wind_speed": weather_data['wind']['speed'],
-                        "description": weather_data['weather']['description']
+                        "description": weather_data['weather'][0]['description']
                     }
                 }
 
