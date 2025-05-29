@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_restful import Api, Resource
 import requests
-from bs4 import BeautifulSoup
 
 # Setup Blueprint
 stats_api = Blueprint('stats_api', __name__, url_prefix='/api/stats')
