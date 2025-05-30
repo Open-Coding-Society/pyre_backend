@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/ubuntu/QcommVNE_backend
+cd /home/ubuntu/pyre_backend
 
 # Verify the installation and check the Python version
 python --version
@@ -16,5 +16,5 @@ source venv/bin/activate
 # Install the required Python packages
 pip install -r requirements.txt
 
-cd /home/ubuntu/QcommVNE_backend
+cd /home/ubuntu/pyre_backend
 ./scripts/db_backup.py
