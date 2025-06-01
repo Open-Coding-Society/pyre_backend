@@ -1,7 +1,7 @@
 server {
     server_name pyre.opencodingsociety.com;
     location / {
-        proxy_pass http://localhost:8505;
+        proxy_pass http://localhost:9505;
         if ($request_method = OPTIONS) {
             add_header "Access-Control-Allow-Credentials" "true" always;
             add_header "Access-Control-Allow-Origin"  "https://SanPranav.github.io" always;
