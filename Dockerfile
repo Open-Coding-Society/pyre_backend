@@ -17,7 +17,7 @@ RUN pip install gunicorn
 
 # Run database scripts (with python interpreter)
 RUN python ./scripts/db_backup.py
-RUN python ./scripts/db_init.py
+RUN echo "y" | python ./scripts/db_init.py
 RUN python ./scripts/db_restore.py
 
 # Set environment variables
