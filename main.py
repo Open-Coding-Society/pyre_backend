@@ -585,8 +585,6 @@ def extract_data():
         data['sections'] = [section.read() for section in Section.query.all()]
         data['channels'] = [channel.read() for channel in Channel.query.all()]
         data['team_members'] = [team_member.read() for team_member in TeamMember.query.all()]
-        data['titanic'] = [titanic.read() for titanic in TitanicModel.query.all()]
-        data['passengers'] = [passenger.read() for passenger in Passenger.query.all()] 
     return data
 
 # Save extracted data to JSON files
@@ -612,7 +610,6 @@ def restore_data(data):
         _ = Section.restore(data['sections'])
         _ = Channel.restore(data['channels'])
         _ = TeamMember.restore(data['team_members'])
-        _ = Passenger.restore(data['passengers'])
     print("Data restored to the new database.")
 
 # Define a command to backup data
