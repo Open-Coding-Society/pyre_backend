@@ -599,7 +599,7 @@ def save_data_to_json(data, directory='backup'):
 # Load data from JSON files
 def load_data_from_json(directory='backup'):
     data = {}
-    for table in ['polls', 'users', 'sections', 'groups', 'channels', 'school_classes', 'votes', 'team_members', 'top_interests', 'chat', 'languages']:
+    for table in ['users', 'sections', 'channels', 'team_members']:
         with open(os.path.join(directory, f'{table}.json'), 'r') as f:
             data[table] = json.load(f)
     return data
