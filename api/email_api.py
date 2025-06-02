@@ -45,5 +45,5 @@ class EmailApi:
             email.delete()
             return jsonify({"message": "Email deleted"})
 
-    api.add_resource(_BULK_CRUD, '/emails')
-    api.add_resource(_CRUD, '/email')
+api.add_resource(EmailApi._BULK_CRUD, '/emails')
+api.add_resource(EmailApi._CRUD, '/email') 
