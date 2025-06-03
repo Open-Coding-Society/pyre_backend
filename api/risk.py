@@ -348,8 +348,8 @@ if __name__ == '__main__':
     print("  GET /api/risk/earthquake?zip=<zipcode>") 
     print("  GET /api/health")
     print("\nExample usage:")
-    print("  curl http://localhost:8505/api/risk/wildfire?zip=92127")
-    print("  curl http://localhost:8505/api/risk/earthquake?zip=92127")
-    print("\nStarting server on http://localhost:8505...")
+    print("  curl http://localhost:8506/api/risk/wildfire?zip=92127")
+    print("  curl http://localhost:8506/api/risk/earthquake?zip=92127")
+    print("\nStarting server on http://localhost:8506...")
     
-    app.run(debug=True, host='0.0.0.0', port=8505)
+    app.run(debug=True, host='0.0.0.0', port=8506)
