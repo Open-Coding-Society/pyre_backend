@@ -33,7 +33,7 @@ from api.user_met import user_met_api
 from api.post_met import post_met_api
 from api.titanic import titanic_api  # Import the titanic API
 from api.weather import weather_api
-from api.email import email_api
+#from api.email import email_api
 from api.fire import forest_fire_api
 from api.stats import stats_api
 from api.historical_fire import historical_fire_api
@@ -65,7 +65,7 @@ app.register_blueprint(user_met_api)
 app.register_blueprint(post_met_api)
 app.register_blueprint(titanic_api)
 app.register_blueprint(weather_api)
-app.register_blueprint(email_api)
+#app.register_blueprint(email_api)
 app.register_blueprint(forest_fire_api)
 app.register_blueprint(stats_api)
 app.register_blueprint(earthquake_api)  # Register the earthquake API
