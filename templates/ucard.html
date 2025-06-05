@@ -64,6 +64,41 @@
         text-align: center;
     }
 
+    .business-card-download {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 25px;
+    }
+
+    .business-card-button {
+        background: linear-gradient(135deg, #f3887c, #c0392b);
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .business-card-button:hover {
+        background: linear-gradient(135deg, #c0392b, #a93226);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .business-card-button:active {
+        transform: translateY(0);
+    }
+
     .main-content {
         display: grid;
         grid-template-columns: 2fr 1fr;
@@ -358,6 +393,12 @@
 
         <div class="contact-info">
             <div class="contact-header">Connect With Us</div>
+
+            <div class="business-card-download">
+                <button class="business-card-button" onclick="downloadBusinessCard()">
+                    Download Business Card
+                </button>
+            </div>
             
             <div class="qr-section">
                 <div style="display: flex; justify-content: center; margin-bottom: 10px;">
@@ -418,4 +459,81 @@
         </div>
     </div>
 </div>
+
+<script>
+function downloadBusinessCard() {
+    const businessCardData = `BEGIN:VCARD
+VERSION:3.0
+FN:PYRE Team
+ORG:PYRE - AI-Powered Seismic Monitoring & Wildfire Prediction
+EMAIL:pyre.ai.help@gmail.com
+URL:https://open-coding-society.github.io/pyre_frontend/
+NOTE:AI-Powered Seismic Monitoring & Wildfire Prediction system that uses machine learning to analyze rapidly changing conditions and provide real-time evacuation guidance to save lives.
+END:VCARD
+
+BEGIN:VCARD
+VERSION:3.0
+FN:Pranav Santhosh
+TITLE:Scrum Master
+ORG:PYRE
+EMAIL:pyre.ai.help@gmail.com
+URL:https://www.linkedin.com/in/pranav-santhosh-830316340/
+END:VCARD
+
+BEGIN:VCARD
+VERSION:3.0
+FN:Nikhil Maturi
+TITLE:Assistant Scrum / ML Engineer
+ORG:PYRE
+EMAIL:pyre.ai.help@gmail.com
+URL:https://www.linkedin.com/in/nikhil-maturi-40a8ab369/
+END:VCARD
+
+BEGIN:VCARD
+VERSION:3.0
+FN:Rohan Bojja
+TITLE:ML Engineer
+ORG:PYRE
+EMAIL:pyre.ai.help@gmail.com
+URL:https://www.linkedin.com/in/rohan-bojja-17bb2a318/
+END:VCARD
+
+BEGIN:VCARD
+VERSION:3.0
+FN:Vasanth Rajesekaran
+TITLE:Frontend Engineer
+ORG:PYRE
+EMAIL:pyre.ai.help@gmail.com
+URL:https://www.linkedin.com/in/vasanth-rajasekaran-5ba062313/
+END:VCARD
+
+BEGIN:VCARD
+VERSION:3.0
+FN:Aarush Gowda
+TITLE:Backend Engineer
+ORG:PYRE
+EMAIL:pyre.ai.help@gmail.com
+URL:https://www.linkedin.com/in/aarush-gowda-b68b7b366/
+END:VCARD
+
+BEGIN:VCARD
+VERSION:3.0
+FN:Nathan Tejidor
+TITLE:ML Engineer
+ORG:PYRE
+EMAIL:pyre.ai.help@gmail.com
+URL:https://www.linkedin.com/in/nathan-tejidor-91aa60368/
+END:VCARD`;
+
+    const blob = new Blob([businessCardData], { type: 'text/vcard;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'PYRE_Team_Contacts.vcf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+}
+</script>
 {% endblock %}
