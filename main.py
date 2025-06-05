@@ -150,6 +150,12 @@ def unauthorized():
 def user_index():
     return render_template("user_index.html")
 
+@app.route('/ucard')
+@login_required
+@admin_required
+def ucard():
+    return render_template("ucard.html")
+
 @app.route('/users/table')
 @login_required
 def utable():

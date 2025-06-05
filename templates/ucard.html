@@ -1,0 +1,421 @@
+{% extends "layouts/base.html" %}
+{% set project = "Admin" %}
+
+{% block style %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Arial', sans-serif;
+        padding-top: 100px;
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-bottom: 20px;
+    }
+
+    .contact-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 1200px;
+        width: 100%;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        position: relative;
+        z-index: 10;
+        margin: 0 auto;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .logo {
+        font-size: 3rem;
+        font-weight: bold;
+        background: linear-gradient(45deg, #ff6b6b, #ffa500);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+    }
+
+    .tagline {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+
+    .project-description {
+        background: linear-gradient(45deg, #ff6b6b, #ffa500);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 40px;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        text-align: center;
+    }
+
+    .main-content {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 40px;
+        align-items: start;
+    }
+
+    .team-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+    }
+
+    .team-member {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        cursor: pointer;
+    }
+
+    .team-member:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .member-photo-container {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 15px;
+        position: relative;
+    }
+
+    .member-photo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: block;
+        object-fit: cover;
+        border: 3px solid #f0f0f0;
+        transition: border-color 0.3s ease;
+    }
+
+    .team-member:hover .member-photo {
+        border-color: #ff6b6b;
+    }
+
+    .member-photo-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+        border: 3px solid #f0f0f0;
+        transition: border-color 0.3s ease;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .team-member:hover .member-photo-placeholder {
+        border-color: #ff6b6b;
+    }
+
+    .member-name {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+
+    .member-role {
+        color: #666;
+        font-size: 1rem;
+        text-align: center;
+        padding: 8px 15px;
+        background: #f8f9fa;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .contact-info {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        height: fit-content;
+    }
+
+    .qr-section {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .qr-placeholder {
+        width: 150px;
+        height: 150px;
+        background: #f8f9fa;
+        border: 2px dashed #ddd;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        color: #666;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .qr-label {
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    .social-links {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .social-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #333;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .social-link:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+
+    .social-icon {
+        width: 24px;
+        height: 24px;
+        background: linear-gradient(45deg, #ff6b6b, #ffa500);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 0.8rem;
+    }
+
+    .social-text {
+        font-size: 0.9rem;
+        flex: 1;
+    }
+
+    .contact-header {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+    /* Override body styles from base template */
+    body {
+        background: none !important;
+    }
+
+    /* Ensure navbar stays at top */
+    .navbar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 9999 !important;
+    }
+
+    /* Ensure content appears above background */
+    .contact-card {
+        position: relative;
+        z-index: 1000;
+    }
+
+    @media (max-width: 768px) {
+        .contact-card {
+            padding: 25px;
+        }
+        
+        .main-content {
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        
+        .team-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="contact-card">
+    <div class="header">
+        <div class="logo">🔥 PYRE</div>
+        <div class="tagline">AI-Powered Seismic Monitoring & Wildfire Prediction</div>
+    </div>
+
+    <div class="project-description">
+        Pyre is an AI-powered seismic monitoring and wildfire prediction system that uses machine learning to analyze rapidly changing conditions and provide real-time evacuation guidance to save lives.
+    </div>
+
+    <div class="main-content">
+        <div class="team-section">
+            <a href="https://www.linkedin.com/in/pranav-santhosh-830316340/" class="team-member" target="_blank">
+                <div class="member-photo-container">
+                    <img src="/static/assets/pranav.png" alt="Pranav Santhosh" class="member-photo" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="member-photo-placeholder">PS</div>
+                </div>
+                <div class="member-name">Pranav Santhosh</div>
+                <div class="member-role">Scrum Master</div>
+            </a>
+
+            <a href="https://www.linkedin.com/in/nikhil-maturi-40a8ab369/" class="team-member" target="_blank">
+                <div class="member-photo-container">
+                    <img src="/static/assets/nikhil.png" alt="Nikhil Maturi" class="member-photo" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="member-photo-placeholder">NM</div>
+                </div>
+                <div class="member-name">Nikhil Maturi</div>
+                <div class="member-role">Assistant Scrum / ML Engineer</div>
+            </a>
+
+            <a href="https://www.linkedin.com/in/rohan-bojja-17bb2a318/" class="team-member" target="_blank">
+                <div class="member-photo-container">
+                    <img src="/static/assets/rohan.png" alt="Rohan Bojja" class="member-photo" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="member-photo-placeholder">RB</div>
+                </div>
+                <div class="member-name">Rohan Bojja</div>
+                <div class="member-role">ML Engineer</div>
+            </a>
+
+            <a href="https://www.linkedin.com/in/vasanth-rajasekaran-5ba062313/" class="team-member" target="_blank">
+                <div class="member-photo-container">
+                    <img src="/static/assets/vasanth.png" alt="Vasanth Rajesekaran" class="member-photo" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="member-photo-placeholder">VR</div>
+                </div>
+                <div class="member-name">Vasanth Rajesekaran</div>
+                <div class="member-role">Frontend Engineer</div>
+            </a>
+
+            <a href="https://www.linkedin.com/in/aarush-gowda-b68b7b366/" class="team-member" target="_blank">
+                <div class="member-photo-container">
+                    <img src="/static/assets/aarush.png" alt="Aarush Gowda" class="member-photo" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="member-photo-placeholder">AG</div>
+                </div>
+                <div class="member-name">Aarush Gowda</div>
+                <div class="member-role">Backend Engineer</div>
+            </a>
+
+            <a href="https://www.linkedin.com/in/nathan-tejidor-91aa60368/" class="team-member" target="_blank">
+                <div class="member-photo-container">
+                    <img src="/static/assets/nathan.png" alt="Nathan Tejidor" class="member-photo" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="member-photo-placeholder">NT</div>
+                </div>
+                <div class="member-name">Nathan Tejidor</div>
+                <div class="member-role">ML Engineer</div>
+            </a>
+        </div>
+
+        <div class="contact-info">
+            <div class="contact-header">Connect With Us</div>
+            
+            <div class="qr-section">
+                <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+                    <div style="
+                        padding: 10px;
+                        border-radius: 16px;
+                        background: linear-gradient(135deg, #ff6b6b, #ffa500);
+                        box-shadow: 0 4px 16px rgba(255,107,107,0.10);
+                        display: inline-block;
+                    ">
+                        <div style="
+                            background: #fff;
+                            border-radius: 12px;
+                            padding: 8px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">
+                            <img src="/static/assets/QR.png" alt="Feedback QR Code"
+                                 style="background:none; border:none; width:150px; height:150px; object-fit:contain; border-radius: 8px;"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="qr-label">Scan for FeedBack Form</div>
+            </div>
+
+            <div class="social-links">
+                <a href="mailto:pyre.ai.help@gmail.com" class="social-link">
+                    <div class="social-icon">✉</div>
+                    <div class="social-text">pyre.ai.help@gmail.com</div>
+                </a>
+
+                <a href="https://open-coding-society.github.io/pyre_frontend/" class="social-link" target="_blank">
+                    <div class="social-icon">🌐</div>
+                    <div class="social-text">Main Website</div>
+                </a>
+
+                <a href="https://www.youtube.com/@Pyre-Official-Organization" class="social-link" target="_blank">
+                    <div class="social-icon">📺</div>
+                    <div class="social-text">YouTube Channel</div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=CulV609plLU" class="social-link" target="_blank">
+                    <div class="social-icon">🎬</div>
+                    <div class="social-text">Pitch Video</div>
+                </a>
+
+                <a href="https://github.com/Open-Coding-Society/pyre_backend" class="social-link" target="_blank">
+                    <div class="social-icon">⚙</div>
+                    <div class="social-text">Backend Repository</div>
+                </a>
+
+                <a href="https://github.com/Open-Coding-Society/pyre_frontend" class="social-link" target="_blank">
+                    <div class="social-icon">💻</div>
+                    <div class="social-text">Frontend Repository</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
