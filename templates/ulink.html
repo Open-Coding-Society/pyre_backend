@@ -1,0 +1,103 @@
+{% extends "layouts/base.html" %}
+{% set no_login_required = True %}
+
+{% block style %}
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background: #fff;
+        min-height: 100vh;
+        margin: 0;
+    }
+    .center-content {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .qr-card {
+        background: #fff;
+        border-radius: 32px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        padding: 64px 48px 64px 48px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 900px; /* Increased width */
+        width: 100%;
+    }
+    .qr-big-text {
+        font-size: 2.8rem;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 40px;
+        background: linear-gradient(45deg, #ff6b6b, #ffa500);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .qr-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        gap: 32px;
+    }
+    .qr-img {
+        width: 340px;
+        height: 340px;
+        object-fit: contain;
+        border-radius: 18px;
+        background: #f8f9fa;
+        border: 4px solid #ffb36b33;
+        box-shadow: 0 4px 24px rgba(255,107,107,0.10);
+        margin: 0;
+    }
+    .arrow-svg {
+        width: 80px;
+        height: 120px;
+        display: block;
+    }
+    @media (max-width: 900px) {
+        .qr-card {
+            max-width: 98vw;
+        }
+        .qr-row {
+            gap: 12px;
+        }
+        .qr-img {
+            width: 180px;
+            height: 180px;
+        }
+        .qr-big-text {
+            font-size: 1.5rem;
+        }
+        .arrow-svg {
+            width: 40px;
+            height: 60px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="center-content">
+    <div class="qr-card">
+        <div class="qr-big-text">
+            Scan for contact info<br>and more information<br>about our project
+        </div>
+        <div class="qr-row">
+    <!-- Right arrow SVG (mirrored left arrow) -->
+    <svg class="arrow-svg" viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform: scaleX(-1);">
+        <path d="M80 60 H20 M20 60 L50 20 M20 60 L50 100" stroke="#ff6b6b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <img src="/static/assets/QRLink.png" alt="Scan QR for info" class="qr-img" />
+    <!-- Left arrow SVG -->
+    <svg class="arrow-svg" viewBox="0 0 80 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M80 60 H20 M20 60 L50 20 M20 60 L50 100" stroke="#ff6b6b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+</div>
+    </div>
+</div>
+{% endblock %}

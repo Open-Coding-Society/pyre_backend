@@ -137,24 +137,27 @@ def page_not_found(e):
 def index():
     if current_user.is_authenticated and current_user.role == 'Admin':
         return render_template("index.html")
-    elif current_user.is_authenticated:
-        return render_template("user_index.html")
-    return render_template("login.html")
+    elif not current_user.is_authenticated:
+        return redirect(url_for('ucard', next=request.path))
+#    elif current_user.is_authenticated:
+#        return render_template("user_index.html")
+#    return render_template("login.html")
 
 @app.route('/unauthorized')
 def unauthorized():
     return render_template('unauthorized.html'), 401
 
 @app.route('/user_index')
-@login_required
 def user_index():
     return render_template("user_index.html")
 
 @app.route('/ucard')
-@login_required
-@admin_required
 def ucard():
     return render_template("ucard.html")
+
+@app.route('/ulink')
+def ulink():
+    return render_template("ulink.html")
 
 @app.route('/users/table')
 @login_required
