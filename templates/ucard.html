@@ -462,69 +462,69 @@
 
 <script>
 function downloadBusinessCard() {
-    const businessCardData = `BEGIN:VCARD
-VERSION:3.0
-FN:PYRE Team
-ORG:PYRE - AI-Powered Seismic Monitoring & Wildfire Prediction
-EMAIL:pyre.ai.help@gmail.com
-URL:https://open-coding-society.github.io/pyre_frontend/
-NOTE:AI-Powered Seismic Monitoring & Wildfire Prediction system that uses machine learning to analyze rapidly changing conditions and provide real-time evacuation guidance to save lives.
-END:VCARD
-
-BEGIN:VCARD
+    const businessCards = [
+`BEGIN:VCARD
 VERSION:3.0
 FN:Pranav Santhosh
+N:Santhosh;Pranav;;;
 TITLE:Scrum Master
 ORG:PYRE
 EMAIL:pyre.ai.help@gmail.com
 URL:https://www.linkedin.com/in/pranav-santhosh-830316340/
-END:VCARD
+END:VCARD`,
 
-BEGIN:VCARD
+`BEGIN:VCARD
 VERSION:3.0
 FN:Nikhil Maturi
+N:Maturi;Nikhil;;;
 TITLE:Assistant Scrum / ML Engineer
 ORG:PYRE
 EMAIL:pyre.ai.help@gmail.com
 URL:https://www.linkedin.com/in/nikhil-maturi-40a8ab369/
-END:VCARD
+END:VCARD`,
 
-BEGIN:VCARD
+`BEGIN:VCARD
 VERSION:3.0
 FN:Rohan Bojja
+N:Bojja;Rohan;;;
 TITLE:ML Engineer
 ORG:PYRE
 EMAIL:pyre.ai.help@gmail.com
 URL:https://www.linkedin.com/in/rohan-bojja-17bb2a318/
-END:VCARD
+END:VCARD`,
 
-BEGIN:VCARD
+`BEGIN:VCARD
 VERSION:3.0
 FN:Vasanth Rajesekaran
+N:Rajesekaran;Vasanth;;;
 TITLE:Frontend Engineer
 ORG:PYRE
 EMAIL:pyre.ai.help@gmail.com
 URL:https://www.linkedin.com/in/vasanth-rajasekaran-5ba062313/
-END:VCARD
+END:VCARD`,
 
-BEGIN:VCARD
+`BEGIN:VCARD
 VERSION:3.0
 FN:Aarush Gowda
+N:Gowda;Aarush;;;
 TITLE:Backend Engineer
 ORG:PYRE
 EMAIL:pyre.ai.help@gmail.com
 URL:https://www.linkedin.com/in/aarush-gowda-b68b7b366/
-END:VCARD
+END:VCARD`,
 
-BEGIN:VCARD
+`BEGIN:VCARD
 VERSION:3.0
 FN:Nathan Tejidor
+N:Tejidor;Nathan;;;
 TITLE:ML Engineer
 ORG:PYRE
 EMAIL:pyre.ai.help@gmail.com
 URL:https://www.linkedin.com/in/nathan-tejidor-91aa60368/
-END:VCARD`;
+END:VCARD`
+    ];
 
+    const businessCardData = businessCards.join('\r\n\r\n');
     const blob = new Blob([businessCardData], { type: 'text/vcard;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -535,5 +535,6 @@ END:VCARD`;
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
 }
+
 </script>
 {% endblock %}
